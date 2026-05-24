@@ -20,12 +20,7 @@ val localProperties = Properties().apply {
 }
 
 kotlin {
-    androidTarget {
-        @OptIn(ExperimentalKotlinGradlePluginApi::class)
-        compilerOptions {
-            jvmTarget.set(JvmTarget.JVM_17)
-        }
-    }
+    androidTarget()
 
     // iOS targets are disabled on Windows development environment.
 // Enable this block again when building on macOS.
@@ -111,11 +106,11 @@ iosMain.dependencies {
 }
 
 android {
-    namespace = "com.example.noteai"
+    namespace = "com.example.hujjah"
     compileSdk = 35
     
     defaultConfig {
-        applicationId = "com.example.noteai"
+        applicationId = "com.example.hujjah"
         minSdk = 24
         targetSdk = 35
         versionCode = 1
@@ -158,7 +153,7 @@ android {
 sqldelight {
     databases {
         create("NoteDatabase") {
-            packageName.set("com.example.noteai.data.local")
+            packageName.set("com.example.hujjah.data.local")
         }
     }
 }
