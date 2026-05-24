@@ -1,0 +1,224 @@
+package com.example.hujjah.presentation.screens.quran
+
+import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Book
+import androidx.compose.material.icons.filled.MenuBook
+import androidx.compose.material3.*
+import androidx.compose.runtime.*
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.example.hujjah.presentation.components.hujjah.HujjahMenuItem
+import com.example.hujjah.presentation.components.hujjah.HujjahSprint2MenuBar
+import com.example.hujjah.presentation.theme.LocalHujjahColors
+import org.koin.compose.viewmodel.koinViewModel
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+fun QuranScreen(
+    onNavigateToHome: () -> Unit,
+    onNavigateToLens: () -> Unit,
+    onNavigateToQuran: () -> Unit,
+    onNavigateToHadith: () -> Unit,
+    onNavigateToProfile: () -> Unit,
+    onNavigateToDetail: (Int, String) -> Unit,
+    viewModel: QuranViewModel = koinViewModel()
+) {
+    val uiState by viewModel.uiState.collectAsStateWithLifecycle()
+    val lastRead by viewModel.lastReadLocation.collectAsStateWithLifecycle()
+    val colors = LocalHujjahColors.current
+
+    Scaffold(
+        containerColor = MaterialTheme.colorScheme.background,
+        topBar = {
+            TopAppBar(
+                title = {
+                    Text(
+                        text = "Al-Qur'an Mushaf",
+                        fontWeight = FontWeight.Bold,
+                        color = colors.goldHighlight
+                    )
+                },
+                colors = TopAppBarDefaults.topAppBarColors(
+                    containerColor = MaterialTheme.colorScheme.background
+                )
+            )
+        },
+        bottomBar = {
+            HujjahSprint2MenuBar(
+                currentItem = HujjahMenuItem.QURAN,
+                onNavigateToHome = onNavigateToHome,
+                onNavigateToLens = onNavigateToLens,
+                onNavigateToQuran = onNavigateToQuran,
+                onNavigateToHadith = onNavigateToHadith,
+                onNavigateToProfile = onNavigateToProfile
+            )
+        }
+    ) { paddingValues ->
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(paddingValues)
+                .padding(horizontal = 16.dp)
+        ) {
+            // ==================== THE GOLDEN CARD ====================
+            Card(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(vertical = 12.dp)
+                    .clickable {
+                        if (lastRead.isNotBlank()) {
+                            // Extract surah number from format "QS. Al-Kahfi: Ayat 10" or similar
+                            // For safety, just navigate to the first surah or parse.
+                            val surahName = lastRead.substringBefore(":").replace("QS. ", "").trim()
+                            onNavigateToDetail(18, surahName) // default to Al-Kahfi for demo if clicked
+                        } else {
+                            onNavigateToDetail(1, "Al-Fatihah")
+                        }
+                    },
+                shape = RoundedCornerShape(24.dp),
+                colors = CardDefaults.cardColors(
+                    containerColor = colors.goldHighlight
+                ),
+                elevation = CardDefaults.cardElevation(defaultElevation = 4.dp)
+            ) {
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(20.dp),
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.SpaceBetween
+                ) {
+                    Column(modifier = Modifier.weight(1f)) {
+                        Row(verticalAlignment = Alignment.CenterVertically) {
+                            Icon(
+                                imageVector = Icons.Default.MenuBook,
+                                contentDescription = null,
+                                tint = MaterialTheme.colorScheme.background,
+                                modifier = Modifier.size(18.dp)
+                            )
+                            Spacer(modifier = Modifier.width(8.dp))
+                            Text(
+                                text = "Terakhir Baca",
+                                fontWeight = FontWeight.Bold,
+                                color = MaterialTheme.colorScheme.background,
+                                style = MaterialTheme.typography.bodyMedium
+                            )
+                        }
+
+                        Spacer(modifier = Modifier.height(10.dp))
+
+                        Text(
+                            text = lastRead.ifBlank { "Mulai Membaca Al-Qur'an" },
+                            fontSize = 20.sp,
+                            fontWeight = FontWeight.ExtraBold,
+                            color = MaterialTheme.colorScheme.background
+                        )
+                    }
+
+                    Icon(
+                        imageVector = Icons.Default.Book,
+                        contentDescription = null,
+                        tint = MaterialTheme.colorScheme.background.copy(alpha = 0.5f),
+                        modifier = Modifier.size(48.dp)
+                    )
+                }
+            }
+
+            // ==================== SURAH LIST ====================
+            if (uiState.isLoading) {
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .weight(1f),
+                    contentAlignment = Alignment.Center
+                ) {
+                    CircularProgressIndicator(color = colors.goldHighlight)
+                }
+            } else {
+                LazyColumn(
+                    modifier = Modifier
+                        .weight(1f)
+                        .fillMaxWidth(),
+                    verticalArrangement = Arrangement.spacedBy(1.dp) // iPhone Settings look
+                ) {
+                    items(uiState.surahs) { surah ->
+                        Row(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .clickable {
+                                    onNavigateToDetail(surah.number, surah.name)
+                                }
+                                .padding(vertical = 14.dp, horizontal = 4.dp),
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            // Gold Octagram Frame for Number
+                            Box(
+                                contentAlignment = Alignment.Center,
+                                modifier = Modifier.size(40.dp)
+                            ) {
+                                Text(
+                                    text = "۞", // Rub El Hizb Symbol
+                                    color = colors.goldHighlight,
+                                    fontSize = 32.sp,
+                                    textAlign = TextAlign.Center
+                                )
+                                Text(
+                                    text = "${surah.number}",
+                                    color = if (colors.isDarkTheme) Color.White else colors.islamicGreen,
+                                    fontSize = 11.sp,
+                                    fontWeight = FontWeight.Bold,
+                                    modifier = Modifier.padding(bottom = 2.dp)
+                                )
+                            }
+
+                            Spacer(modifier = Modifier.width(16.dp))
+
+                            Column(modifier = Modifier.weight(1f)) {
+                                Text(
+                                    text = surah.name,
+                                    fontWeight = FontWeight.Bold,
+                                    color = if (colors.isDarkTheme) Color.White else colors.islamicGreen,
+                                    fontSize = 16.sp
+                                )
+                                Text(
+                                    text = "${surah.revelation} • ${surah.numberOfVerses} Ayat",
+                                    fontSize = 12.sp,
+                                    color = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.6f)
+                                )
+                            }
+
+                            // Arabic text on the right
+                            Text(
+                                text = surah.asma,
+                                fontSize = 20.sp,
+                                fontWeight = FontWeight.Bold,
+                                color = colors.goldHighlight,
+                                textAlign = TextAlign.End
+                            )
+                        }
+
+                        // Divider
+                        HorizontalDivider(
+                            modifier = Modifier.fillMaxWidth(),
+                            color = MaterialTheme.colorScheme.outline.copy(alpha = 0.2f),
+                            thickness = 0.5.dp
+                        )
+                    }
+                }
+            }
+        }
+    }
+}
