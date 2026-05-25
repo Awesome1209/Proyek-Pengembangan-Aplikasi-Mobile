@@ -30,6 +30,8 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.example.hujjah.presentation.components.hujjah.shimmerBrush
+import com.example.hujjah.presentation.components.hujjah.ShimmerHadithItem
 import com.example.hujjah.presentation.components.hujjah.HujjahMenuItem
 import com.example.hujjah.presentation.components.hujjah.HujjahSprint2MenuBar
 import com.example.hujjah.presentation.theme.LocalHujjahColors
@@ -110,26 +112,46 @@ fun HadithScreen(
                         modifier = Modifier.padding(vertical = 12.dp)
                     )
 
-                    LazyVerticalGrid(
-                        columns = GridCells.Fixed(2),
-                        verticalArrangement = Arrangement.spacedBy(16.dp),
-                        horizontalArrangement = Arrangement.spacedBy(16.dp),
-                        modifier = Modifier.weight(1f)
-                    ) {
-                        items(uiState.books) { book ->
-                            Card(
-                                modifier = Modifier
-                                    .fillMaxWidth()
-                                    .height(140.dp)
-                                    .clickable {
-                                        viewModel.selectBook(book.id, book.name)
-                                    },
-                                shape = RoundedCornerShape(24.dp),
-                                border = BorderStroke(1.5.dp, colors.goldHighlight.copy(alpha = 0.4f)),
-                                colors = CardDefaults.cardColors(
-                                    containerColor = if (colors.isDarkTheme) colors.islamicGreen else MaterialTheme.colorScheme.surface
+                    if (uiState.isLoading) {
+                        // Grid Shimmer Loading for Books
+                        val brush = shimmerBrush()
+                        LazyVerticalGrid(
+                            columns = GridCells.Fixed(2),
+                            verticalArrangement = Arrangement.spacedBy(16.dp),
+                            horizontalArrangement = Arrangement.spacedBy(16.dp),
+                            modifier = Modifier.weight(1f)
+                        ) {
+                            items(6) {
+                                Box(
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .height(140.dp)
+                                        .background(brush, shape = RoundedCornerShape(24.dp))
                                 )
-                            ) {
+                            }
+                        }
+                    } else {
+                        LazyVerticalGrid(
+                            columns = GridCells.Fixed(2),
+                            verticalArrangement = Arrangement.spacedBy(16.dp),
+                            horizontalArrangement = Arrangement.spacedBy(16.dp),
+                            modifier = Modifier.weight(1f)
+                        ) {
+                            items(uiState.books) { book ->
+                                Card(
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .height(140.dp)
+                                        .goldGlowShadow(colors.isDarkTheme, colors.goldHighlight, RoundedCornerShape(24.dp))
+                                        .clickable {
+                                            viewModel.selectBook(book.id, book.name)
+                                        },
+                                    shape = RoundedCornerShape(24.dp),
+                                    border = BorderStroke(1.dp, colors.goldHighlight.copy(alpha = 0.3f)),
+                                    colors = CardDefaults.cardColors(
+                                        containerColor = if (colors.isDarkTheme) Color.Black else Color.White
+                                    )
+                                ) {
                                 Column(
                                     modifier = Modifier
                                         .fillMaxSize()
@@ -156,6 +178,7 @@ fun HadithScreen(
                                 }
                             }
                         }
+                    }
                     }
                 }
             } else {
@@ -313,5 +336,22 @@ fun HadithScreen(
                 }
             }
         }
+    }
+}
+
+
+// ==================== GOLD GLOW SHADOW EXTENSION MODIFIER ====================
+private fun Modifier.goldGlowShadow(
+    enabled: Boolean,
+    color: Color,
+    shape: androidx.compose.ui.graphics.Shape
+): Modifier {
+    return if (enabled) {
+        this
+            .border(4.dp, color.copy(alpha = 0.08f), shape)
+            .border(2.dp, color.copy(alpha = 0.2f), shape)
+            .border(0.5.dp, color.copy(alpha = 0.5f), shape)
+    } else {
+        this
     }
 }
