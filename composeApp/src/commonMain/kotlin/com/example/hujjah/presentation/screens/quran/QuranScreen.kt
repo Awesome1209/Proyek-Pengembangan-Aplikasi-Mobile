@@ -17,6 +17,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
@@ -194,25 +195,12 @@ fun QuranScreen(
                                 .padding(vertical = 14.dp, horizontal = 4.dp),
                             verticalAlignment = Alignment.CenterVertically
                         ) {
-                            // Gold Octagram Frame for Number
-                            Box(
-                                contentAlignment = Alignment.Center,
-                                modifier = Modifier.size(40.dp)
-                            ) {
-                                Text(
-                                    text = "۞", // Rub El Hizb Symbol
-                                    color = colors.goldHighlight,
-                                    fontSize = 32.sp,
-                                    textAlign = TextAlign.Center
+                                // Gold Octagram Frame for Number
+                                GoldOctagramNumber(
+                                    number = surah.number,
+                                    isDarkTheme = colors.isDarkTheme,
+                                    goldColor = colors.goldHighlight
                                 )
-                                Text(
-                                    text = "${surah.number}",
-                                    color = if (colors.isDarkTheme) Color.White else colors.islamicGreen,
-                                    fontSize = 11.sp,
-                                    fontWeight = FontWeight.Bold,
-                                    modifier = Modifier.padding(bottom = 2.dp)
-                                )
-                            }
 
                             Spacer(modifier = Modifier.width(16.dp))
 
@@ -250,5 +238,40 @@ fun QuranScreen(
                 }
             }
         }
+    }
+}
+
+
+// ==================== GOLD OCTAGRAM NUMBER ICON (RUB EL HIZB SHAPE) ====================
+@Composable
+fun GoldOctagramNumber(
+    number: Int,
+    isDarkTheme: Boolean,
+    goldColor: Color,
+    modifier: Modifier = Modifier
+) {
+    Box(
+        contentAlignment = Alignment.Center,
+        modifier = modifier.size(40.dp)
+    ) {
+        Box(
+            modifier = Modifier
+                .size(26.dp)
+                .background(goldColor.copy(alpha = 0.15f), shape = RoundedCornerShape(4.dp))
+                .border(1.dp, goldColor, RoundedCornerShape(4.dp))
+        )
+        Box(
+            modifier = Modifier
+                .size(26.dp)
+                .graphicsLayer(rotationZ = 45f)
+                .background(goldColor.copy(alpha = 0.15f), shape = RoundedCornerShape(4.dp))
+                .border(1.dp, goldColor, RoundedCornerShape(4.dp))
+        )
+        Text(
+            text = "$number",
+            color = if (isDarkTheme) Color.White else Color(0xFF134E4A),
+            fontSize = 11.sp,
+            fontWeight = FontWeight.Bold
+        )
     }
 }
