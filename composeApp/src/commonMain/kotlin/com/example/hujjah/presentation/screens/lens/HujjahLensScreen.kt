@@ -30,6 +30,8 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.example.hujjah.domain.model.islamic.IslamicReference
+import com.example.hujjah.domain.model.islamic.ChatMessage
+import com.example.hujjah.domain.model.islamic.Sender
 import com.example.hujjah.presentation.components.hujjah.HujjahMenuItem
 import com.example.hujjah.presentation.components.hujjah.HujjahSprint2MenuBar
 import com.example.hujjah.presentation.theme.LocalHujjahColors
@@ -198,11 +200,14 @@ fun HujjahLensScreen(
             ) {
                 // FLOATING CONTEXT FILTER (Capsules)
                 val emotionFilters = listOf(
-                    EmotionFilter("Cemas 😟", "Saya merasa sangat cemas dan takut akan masa depan saya."),
+                    EmotionFilter("Cemas 😟", "Saya merasa cemas dan takut akan masa depan saya."),
                     EmotionFilter("Sedih 😢", "Saya merasa sedih dan hampa saat ini."),
                     EmotionFilter("Marah 😡", "Saya sedang marah dan sulit mengendalikan emosi saya."),
-                    EmotionFilter("Ragu ❓", "Saya ragu dengan keputusan saya dan butuh ketetapan hati."),
-                    EmotionFilter("Syukur 🤲", "Saya sangat bersyukur atas nikmat yang didapatkan hari ini.")
+                    EmotionFilter("Ujian 🤲", "Saya sedang menghadapi ujian hidup yang berat."),
+                    EmotionFilter("Dosa 😔", "Saya menyesal atas dosa saya dan ingin bertaubat."),
+                    EmotionFilter("Syukur ☀️", "Saya sangat bersyukur atas nikmat yang didapatkan hari ini."),
+                    EmotionFilter("Malas Shalat 🕌", "Saya merasa malas mendirikan shalat tepat waktu."),
+                    EmotionFilter("Malas Belajar 📚", "Saya sedang malas belajar dan menuntut ilmu.")
                 )
 
                 Text(
@@ -393,15 +398,17 @@ private fun ChatBubble(
                 ),
                 colors = CardDefaults.cardColors(
                     containerColor = if (isUser) {
-                        MaterialTheme.colorScheme.surfaceVariant // Gray like iMessage secondary
+                        if (colors.isDarkTheme) MaterialTheme.colorScheme.surfaceVariant else MaterialTheme.colorScheme.surface
                     } else {
-                        if (colors.isDarkTheme) colors.islamicGreen else MaterialTheme.colorScheme.surface
+                        if (colors.isDarkTheme) colors.islamicGreen else colors.islamicGreen.copy(alpha = 0.08f)
                     }
                 ),
                 elevation = CardDefaults.cardElevation(defaultElevation = 1.dp),
                 border = if (!isUser) {
-                    BorderStroke(1.dp, colors.goldHighlight.copy(alpha = 0.2f))
-                } else null,
+                    BorderStroke(1.dp, colors.goldHighlight.copy(alpha = 0.3f))
+                } else {
+                    if (!colors.isDarkTheme) BorderStroke(0.5.dp, MaterialTheme.colorScheme.outline.copy(alpha = 0.3f)) else null
+                },
                 modifier = Modifier.combinedClickable(
                     onLongClick = onLongPressMessage,
                     onClick = {}
@@ -461,59 +468,71 @@ private fun ChatBubble(
                                 onClick = {}
                             )
                     ) {
-                        Column(modifier = Modifier.padding(14.dp)) {
-                            Row(
-                                modifier = Modifier.fillMaxWidth(),
-                                horizontalArrangement = Arrangement.SpaceBetween,
-                                verticalAlignment = Alignment.CenterVertically
-                            ) {
-                                Text(
-                                    text = if (reference.sourceType == com.example.hujjah.domain.model.islamic.SourceType.QURAN) "Al-Qur'an" else "Hadis",
-                                    fontSize = 11.sp,
-                                    fontWeight = FontWeight.Bold,
-                                    color = colors.goldHighlight,
-                                    modifier = Modifier
-                                        .clip(RoundedCornerShape(4.dp))
-                                        .background(colors.goldHighlight.copy(alpha = 0.15f))
-                                        .padding(horizontal = 6.dp, vertical = 2.dp)
-                                )
+                        Row(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .height(IntrinsicSize.Min)
+                        ) {
+                            Box(
+                                modifier = Modifier
+                                    .width(4.dp)
+                                    .fillMaxHeight()
+                                    .background(colors.goldHighlight)
+                            )
+                            Column(modifier = Modifier.padding(14.dp).weight(1f)) {
+                                Row(
+                                    modifier = Modifier.fillMaxWidth(),
+                                    horizontalArrangement = Arrangement.SpaceBetween,
+                                    verticalAlignment = Alignment.CenterVertically
+                                ) {
+                                    Text(
+                                        text = if (reference.sourceType == com.example.hujjah.domain.model.islamic.SourceType.QURAN) "Al-Qur'an" else "Hadis",
+                                        fontSize = 11.sp,
+                                        fontWeight = FontWeight.Bold,
+                                        color = colors.goldHighlight,
+                                        modifier = Modifier
+                                            .clip(RoundedCornerShape(4.dp))
+                                            .background(colors.goldHighlight.copy(alpha = 0.15f))
+                                            .padding(horizontal = 6.dp, vertical = 2.dp)
+                                    )
+
+                                    Text(
+                                        text = reference.sourceName,
+                                        fontSize = 12.sp,
+                                        fontWeight = FontWeight.Bold,
+                                        color = if (colors.isDarkTheme) Color.White else colors.islamicGreen
+                                    )
+                                }
+
+                                Spacer(modifier = Modifier.height(10.dp))
 
                                 Text(
-                                    text = reference.sourceName,
-                                    fontSize = 12.sp,
-                                    fontWeight = FontWeight.Bold,
+                                    text = reference.arabicText,
+                                    fontSize = 18.sp,
+                                    fontWeight = FontWeight.Medium,
+                                    textAlign = TextAlign.End,
+                                    lineHeight = 30.sp,
+                                    modifier = Modifier.fillMaxWidth(),
                                     color = if (colors.isDarkTheme) Color.White else colors.islamicGreen
                                 )
+
+                                Spacer(modifier = Modifier.height(6.dp))
+
+                                Text(
+                                    text = "\"${reference.translation}\"",
+                                    fontSize = 13.sp,
+                                    fontStyle = FontStyle.Italic,
+                                    color = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.8f)
+                                )
+
+                                Spacer(modifier = Modifier.height(6.dp))
+
+                                Text(
+                                    text = reference.explanation,
+                                    fontSize = 12.sp,
+                                    color = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.6f)
+                                )
                             }
-
-                            Spacer(modifier = Modifier.height(10.dp))
-
-                            Text(
-                                text = reference.arabicText,
-                                fontSize = 18.sp,
-                                fontWeight = FontWeight.Medium,
-                                textAlign = TextAlign.End,
-                                lineHeight = 30.sp,
-                                modifier = Modifier.fillMaxWidth(),
-                                color = if (colors.isDarkTheme) Color.White else colors.islamicGreen
-                            )
-
-                            Spacer(modifier = Modifier.height(6.dp))
-
-                            Text(
-                                text = "\"${reference.translation}\"",
-                                fontSize = 13.sp,
-                                fontStyle = FontStyle.Italic,
-                                color = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.8f)
-                            )
-
-                            Spacer(modifier = Modifier.height(6.dp))
-
-                            Text(
-                                text = reference.explanation,
-                                fontSize = 12.sp,
-                                color = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.6f)
-                            )
                         }
                     }
                 }
