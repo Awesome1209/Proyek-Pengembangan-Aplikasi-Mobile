@@ -17,4 +17,7 @@ expect object ApiConfig {
      * iOS: Diambil dari Info.plist atau hardcoded (untuk development)
      */
     val geminiApiKey: String
+    val QURAN_BASE_URL: String
+    val HADITH_BASE_URL: String
+    val GEMINI_BASE_URL: String
 }

@@ -14,6 +14,10 @@ import platform.Foundation.NSBundle
  * Atau untuk development, bisa hardcode langsung (JANGAN untuk production!)
  */
 actual object ApiConfig {
+    actual val QURAN_BASE_URL: String = "https://quran-api-id.vercel.app"
+    actual val HADITH_BASE_URL: String = "https://api.hadith.gading.dev"
+    actual val GEMINI_BASE_URL: String = "https://generativelanguage.googleapis.com/v1beta/models/"
+
     actual val geminiApiKey: String
         get() {
             // Try to get from Info.plist

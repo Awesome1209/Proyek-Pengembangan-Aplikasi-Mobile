@@ -2,6 +2,7 @@ package com.example.hujjah.core.network
 
 import io.ktor.client.HttpClient
 import io.ktor.client.plugins.HttpTimeout
+import io.ktor.client.plugins.cache.HttpCache
 import io.ktor.client.plugins.contentnegotiation.ContentNegotiation
 import io.ktor.client.plugins.logging.LogLevel
 import io.ktor.client.plugins.logging.Logger
@@ -20,6 +21,7 @@ import kotlinx.serialization.json.Json
  * - ContentNegotiation: Serialize/deserialize JSON
  * - Logging: Log request/response untuk debugging
  * - HttpTimeout: Set timeout untuk request
+ * - HttpCache: Cache HTTP responses secara otomatis
  */
 object HttpClientFactory {
     
@@ -45,6 +47,9 @@ object HttpClientFactory {
                 json(json)
             }
             
+            // HTTP Caching
+            install(HttpCache)
+            
             // Logging (untuk development/debugging)
             if (enableLogging) {
                 install(Logging) {
@@ -57,11 +62,11 @@ object HttpClientFactory {
                 }
             }
             
-            // Timeout configuration
+            // Timeout configuration (optimasi untuk respon cepat)
             install(HttpTimeout) {
-                requestTimeoutMillis = 30_000    // 30 seconds
-                connectTimeoutMillis = 15_000    // 15 seconds
-                socketTimeoutMillis = 30_000     // 30 seconds
+                requestTimeoutMillis = 15_000    // 15 seconds
+                connectTimeoutMillis = 10_000    // 10 seconds
+                socketTimeoutMillis = 15_000     // 15 seconds
             }
         }
     }
