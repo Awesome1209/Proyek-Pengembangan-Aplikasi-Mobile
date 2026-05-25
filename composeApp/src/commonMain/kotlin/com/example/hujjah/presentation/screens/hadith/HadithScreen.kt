@@ -1,6 +1,9 @@
 package com.example.hujjah.presentation.screens.hadith
 
+import androidx.compose.animation.core.*
 import androidx.compose.foundation.BorderStroke
+import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
@@ -22,6 +25,10 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.ui.graphics.Shadow
+import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.ImeAction
@@ -30,10 +37,12 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import com.example.hujjah.presentation.components.hujjah.shimmerBrush
-import com.example.hujjah.presentation.components.hujjah.ShimmerHadithItem
 import com.example.hujjah.presentation.components.hujjah.HujjahMenuItem
 import com.example.hujjah.presentation.components.hujjah.HujjahSprint2MenuBar
+import com.example.hujjah.presentation.components.hujjah.HujjahEmptyState
+import com.example.hujjah.presentation.components.hujjah.HujjahErrorState
+import com.example.hujjah.presentation.components.hujjah.shimmerBrush
+import com.example.hujjah.presentation.components.hujjah.ShimmerHadithItem
 import com.example.hujjah.presentation.theme.LocalHujjahColors
 import org.koin.compose.koinInject
 import org.koin.compose.viewmodel.koinViewModel
@@ -57,6 +66,17 @@ fun HadithScreen(
 
     val isViewingBook = uiState.currentBookId != null
 
+    // Text glow configuration for dark mode
+    val textGlow = if (colors.isDarkTheme) {
+        Shadow(
+            color = colors.goldHighlight.copy(alpha = 0.8f),
+            offset = Offset(0f, 0f),
+            blurRadius = 8f
+        )
+    } else {
+        Shadow.None
+    }
+
     Scaffold(
         containerColor = MaterialTheme.colorScheme.background,
         topBar = {
@@ -65,7 +85,10 @@ fun HadithScreen(
                     Text(
                         text = if (isViewingBook) uiState.currentBookName.orEmpty() else "Hadits Ensiklopedia",
                         fontWeight = FontWeight.Bold,
-                        color = colors.goldHighlight
+                        color = colors.goldHighlight,
+                        style = MaterialTheme.typography.titleLarge.copy(
+                            shadow = textGlow
+                        )
                     )
                 },
                 navigationIcon = {
@@ -130,6 +153,11 @@ fun HadithScreen(
                                 )
                             }
                         }
+                    } else if (uiState.error != null) {
+                        HujjahErrorState(
+                            message = uiState.error ?: "Gagal memuat kitab hadits",
+                            onRetry = { viewModel.selectBook("", "") } // Reloads by resetting
+                        )
                     } else {
                         LazyVerticalGrid(
                             columns = GridCells.Fixed(2),
@@ -152,39 +180,39 @@ fun HadithScreen(
                                         containerColor = if (colors.isDarkTheme) Color.Black else Color.White
                                     )
                                 ) {
-                                Column(
-                                    modifier = Modifier
-                                        .fillMaxSize()
-                                        .padding(16.dp),
-                                    verticalArrangement = Arrangement.SpaceBetween
-                                ) {
-                                    Text(
-                                        text = "📚",
-                                        fontSize = 28.sp
-                                    )
-                                    Column {
+                                    Column(
+                                        modifier = Modifier
+                                            .fillMaxSize()
+                                            .padding(16.dp),
+                                        verticalArrangement = Arrangement.SpaceBetween
+                                    ) {
                                         Text(
-                                            text = book.name,
-                                            fontWeight = FontWeight.Bold,
-                                            fontSize = 15.sp,
-                                            color = colors.goldHighlight
+                                            text = "📚",
+                                            fontSize = 28.sp
                                         )
-                                        Text(
-                                            text = "${book.totalHadith} Hadits",
-                                            fontSize = 11.sp,
-                                            color = if (colors.isDarkTheme) Color.White.copy(alpha = 0.6f) else colors.islamicGreen.copy(alpha = 0.6f)
-                                        )
+                                        Column {
+                                            Text(
+                                                text = book.name,
+                                                fontWeight = FontWeight.Bold,
+                                                fontSize = 15.sp,
+                                                color = colors.goldHighlight
+                                            )
+                                            Text(
+                                                text = "${book.totalHadith} Hadits",
+                                                fontSize = 11.sp,
+                                                color = if (colors.isDarkTheme) Color.White.copy(alpha = 0.6f) else colors.islamicGreen.copy(alpha = 0.6f)
+                                            )
+                                        }
                                     }
                                 }
                             }
                         }
                     }
-                    }
                 }
             } else {
                 // ==================== 2. PAGINATED LIST VIEW OF HADITHS ====================
                 Column(modifier = Modifier.fillMaxSize()) {
-                    // Search bar
+                    // ==================== SEARCH BAR WITH iOS FAST DELETE (X) ====================
                     Row(
                         modifier = Modifier
                             .fillMaxWidth()
@@ -230,19 +258,34 @@ fun HadithScreen(
                             colors = ButtonDefaults.buttonColors(containerColor = colors.goldHighlight),
                             shape = RoundedCornerShape(24.dp)
                         ) {
-                            Icon(Icons.Default.Search, contentDescription = "Search")
+                            Icon(Icons.Default.Search, contentDescription = "Search", tint = MaterialTheme.colorScheme.background)
                         }
                     }
 
                     if (uiState.isLoading) {
-                        Box(
+                        // Shimmer Loading for Hadiths
+                        val brush = shimmerBrush()
+                        LazyColumn(
                             modifier = Modifier
-                                .fillMaxWidth()
-                                .weight(1f),
-                            contentAlignment = Alignment.Center
+                                .weight(1f)
+                                .fillMaxWidth(),
+                            verticalArrangement = Arrangement.spacedBy(16.dp),
+                            contentPadding = PaddingValues(bottom = 24.dp)
                         ) {
-                            CircularProgressIndicator(color = colors.goldHighlight)
+                            items(4) {
+                                ShimmerHadithItem(brush = brush)
+                            }
                         }
+                    } else if (uiState.error != null && uiState.hadiths.isEmpty()) {
+                        HujjahErrorState(
+                            message = uiState.error ?: "Terjadi kesalahan",
+                            onRetry = { viewModel.performSearch() }
+                        )
+                    } else if (uiState.hadiths.isEmpty()) {
+                        HujjahEmptyState(
+                            title = "Hadits Tidak Ditemukan",
+                            message = "Tidak ada nomor hadits yang cocok dengan pencarian \"${uiState.searchQuery}\" di kitab ini."
+                        )
                     } else {
                         val listState = rememberLazyListState()
 
@@ -271,12 +314,14 @@ fun HadithScreen(
                         ) {
                             items(uiState.hadiths) { hadith ->
                                 Card(
-                                    modifier = Modifier.fillMaxWidth(),
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .goldGlowShadow(colors.isDarkTheme, colors.goldHighlight, RoundedCornerShape(20.dp)),
                                     shape = RoundedCornerShape(20.dp),
                                     colors = CardDefaults.cardColors(
-                                        containerColor = if (colors.isDarkTheme) colors.islamicGreen.copy(alpha = 0.4f) else MaterialTheme.colorScheme.surface
+                                        containerColor = if (colors.isDarkTheme) Color.Black else Color.White
                                     ),
-                                    border = BorderStroke(0.5.dp, colors.goldHighlight.copy(alpha = 0.2f))
+                                    border = BorderStroke(1.dp, colors.goldHighlight.copy(alpha = 0.25f))
                                 ) {
                                     Column(modifier = Modifier.padding(16.dp)) {
                                         Row(
@@ -288,7 +333,8 @@ fun HadithScreen(
                                                 text = "No. ${hadith.number}",
                                                 fontWeight = FontWeight.Bold,
                                                 color = colors.goldHighlight,
-                                                fontSize = 12.sp
+                                                fontSize = 12.sp,
+                                                style = TextStyle(shadow = textGlow)
                                             )
                                         }
 
@@ -301,7 +347,8 @@ fun HadithScreen(
                                             textAlign = TextAlign.End,
                                             lineHeight = 34.sp,
                                             modifier = Modifier.fillMaxWidth(),
-                                            color = if (colors.isDarkTheme) Color.White else colors.islamicGreen
+                                            color = if (colors.isDarkTheme) Color.White else colors.islamicGreen,
+                                            style = TextStyle(shadow = textGlow)
                                         )
 
                                         Spacer(modifier = Modifier.height(10.dp))
@@ -318,17 +365,8 @@ fun HadithScreen(
 
                             if (uiState.isPageLoading) {
                                 item {
-                                    Box(
-                                        modifier = Modifier
-                                            .fillMaxWidth()
-                                            .padding(16.dp),
-                                        contentAlignment = Alignment.Center
-                                    ) {
-                                        CircularProgressIndicator(
-                                            color = colors.goldHighlight,
-                                            modifier = Modifier.size(24.dp)
-                                        )
-                                    }
+                                    val brush = shimmerBrush()
+                                    ShimmerHadithItem(brush = brush)
                                 }
                             }
                         }
@@ -338,7 +376,6 @@ fun HadithScreen(
         }
     }
 }
-
 
 // ==================== GOLD GLOW SHADOW EXTENSION MODIFIER ====================
 private fun Modifier.goldGlowShadow(
