@@ -26,9 +26,9 @@ private val DarkColorScheme = darkColorScheme(
     onPrimary = TrueBlack,
     background = TrueBlack,
     onBackground = TextPrimaryDark,
-    surface = DarkIslamicGreen,
+    surface = TrueBlack,
     onSurface = TextPrimaryDark,
-    surfaceVariant = DarkSurface,
+    surfaceVariant = TrueBlack,
     onSurfaceVariant = TextSecondaryDark,
     outline = OutlineDark
 )
