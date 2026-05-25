@@ -43,6 +43,20 @@ class HomeViewModel(
             initialValue = ""
         )
 
+    val userName: StateFlow<String> = userPreferences.userName
+        .stateIn(
+            scope = viewModelScope,
+            started = SharingStarted.WhileSubscribed(5000),
+            initialValue = "Awi"
+        )
+
+    val profileImageBase64: StateFlow<String> = userPreferences.profileImageBase64
+        .stateIn(
+            scope = viewModelScope,
+            started = SharingStarted.WhileSubscribed(5000),
+            initialValue = ""
+        )
+
     // Kutipan hari ini secara default. Nantinya, ini bisa dicocokkan dinamis berdasarkan input Lens
     val quoteOfTheDay: StateFlow<QuoteData> = lastReadLocation.map { _ ->
         // Default Quote
