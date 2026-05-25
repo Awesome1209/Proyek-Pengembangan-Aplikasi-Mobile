@@ -20,7 +20,12 @@ val localProperties = Properties().apply {
 }
 
 kotlin {
-    androidTarget()
+    androidTarget {
+        @OptIn(ExperimentalKotlinGradlePluginApi::class)
+        compilerOptions {
+            jvmTarget.set(JvmTarget.JVM_17)
+        }
+    }
 
     // iOS targets are disabled on Windows development environment.
 // Enable this block again when building on macOS.
