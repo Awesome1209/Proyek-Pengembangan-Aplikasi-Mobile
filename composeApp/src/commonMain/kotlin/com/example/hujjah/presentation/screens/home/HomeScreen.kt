@@ -2,6 +2,8 @@ package com.example.hujjah.presentation.screens.home
 
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.tween
+import androidx.compose.animation.core.spring
+import androidx.compose.animation.core.Spring
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
@@ -52,6 +54,15 @@ fun HomeScreen(
     val isTimerRunning by viewModel.isTimerRunning.collectAsStateWithLifecycle()
 
     val colors = LocalHujjahColors.current
+    val textGlow = if (colors.isDarkTheme) {
+        androidx.compose.ui.graphics.Shadow(
+            color = colors.goldHighlight.copy(alpha = 0.8f),
+            offset = androidx.compose.ui.geometry.Offset(0f, 0f),
+            blurRadius = 8f
+        )
+    } else {
+        androidx.compose.ui.graphics.Shadow.None
+    }
     val targetSeconds = viewModel.dailyTargetSeconds
     val progress = (durationSeconds.toFloat() / targetSeconds.toFloat()).coerceIn(0f, 1f)
 
@@ -95,7 +106,9 @@ fun HomeScreen(
                     )
                     Text(
                         text = "Awi",
-                        style = MaterialTheme.typography.headlineMedium,
+                        style = MaterialTheme.typography.headlineMedium.copy(
+                            shadow = textGlow
+                        ),
                         fontWeight = FontWeight.Bold,
                         color = colors.goldHighlight
                     )
@@ -143,7 +156,8 @@ fun HomeScreen(
                 modifier = Modifier
                     .fillMaxWidth()
                     .weight(1.2f)
-                    .padding(vertical = 16.dp),
+                    .padding(vertical = 16.dp)
+                    .goldGlowShadow(colors.isDarkTheme, colors.goldHighlight, RoundedCornerShape(32.dp)),
                 shape = RoundedCornerShape(32.dp),
                 colors = CardDefaults.cardColors(
                     containerColor = if (colors.isDarkTheme) {
@@ -167,7 +181,9 @@ fun HomeScreen(
                 ) {
                     Text(
                         text = "Progres Mengaji Hari Ini",
-                        style = MaterialTheme.typography.titleMedium,
+                        style = MaterialTheme.typography.titleMedium.copy(
+                            shadow = textGlow
+                        ),
                         fontWeight = FontWeight.Bold,
                         color = if (colors.isDarkTheme) Color.White else colors.islamicGreen
                     )
@@ -354,5 +370,21 @@ fun HomeScreen(
                 }
             }
         }
+    }
+}
+
+// ==================== GOLD GLOW SHADOW EXTENSION MODIFIER ====================
+private fun Modifier.goldGlowShadow(
+    enabled: Boolean,
+    color: Color,
+    shape: androidx.compose.ui.graphics.Shape
+): Modifier {
+    return if (enabled) {
+        this
+            .border(4.dp, color.copy(alpha = 0.08f), shape)
+            .border(2.dp, color.copy(alpha = 0.2f), shape)
+            .border(0.5.dp, color.copy(alpha = 0.5f), shape)
+    } else {
+        this
     }
 }
