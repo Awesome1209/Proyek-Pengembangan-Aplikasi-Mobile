@@ -10,6 +10,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Book
 import androidx.compose.material.icons.filled.MenuBook
 import androidx.compose.material.icons.filled.Search
+import androidx.compose.material.icons.filled.Close
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -144,6 +145,17 @@ fun QuranScreen(
                 onValueChange = viewModel::onSearchQueryChanged,
                 placeholder = { Text("Cari Surah...", fontSize = 14.sp) },
                 leadingIcon = { Icon(Icons.Default.Search, contentDescription = null, tint = colors.goldHighlight) },
+                trailingIcon = {
+                    if (uiState.searchQuery.isNotEmpty()) {
+                        IconButton(onClick = { viewModel.onSearchQueryChanged("") }) {
+                            Icon(
+                                imageVector = Icons.Default.Close,
+                                contentDescription = "Hapus Pencarian",
+                                tint = colors.goldHighlight
+                            )
+                        }
+                    }
+                },
                 shape = RoundedCornerShape(24.dp),
                 modifier = Modifier.fillMaxWidth(),
                 maxLines = 1,
