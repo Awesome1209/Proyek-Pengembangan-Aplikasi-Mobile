@@ -15,6 +15,7 @@ import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material.icons.filled.Search
+import androidx.compose.material.icons.filled.Close
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -178,6 +179,17 @@ fun HadithScreen(
                             keyboardActions = KeyboardActions(
                                 onSearch = { viewModel.performSearch() }
                             ),
+                            trailingIcon = {
+                                if (uiState.searchQuery.isNotEmpty()) {
+                                    IconButton(onClick = { viewModel.onSearchQueryChanged("") }) {
+                                        Icon(
+                                            imageVector = Icons.Default.Close,
+                                            contentDescription = "Hapus Pencarian",
+                                            tint = colors.goldHighlight
+                                        )
+                                    }
+                                }
+                            },
                             shape = RoundedCornerShape(24.dp),
                             modifier = Modifier.weight(1f),
                             maxLines = 1,
