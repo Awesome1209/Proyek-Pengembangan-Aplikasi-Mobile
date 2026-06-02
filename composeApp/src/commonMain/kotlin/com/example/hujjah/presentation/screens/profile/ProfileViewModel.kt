@@ -42,25 +42,41 @@ class ProfileViewModel(
 
     fun updateUserName(name: String) {
         viewModelScope.launch {
-            userPreferences.setUserName(name)
+            try {
+                userPreferences.setUserName(name)
+            } catch (e: Exception) {
+                e.printStackTrace()
+            }
         }
     }
 
     fun setDarkMode(enabled: Boolean) {
         viewModelScope.launch {
-            userPreferences.setDarkMode(enabled)
+            try {
+                userPreferences.setDarkMode(enabled)
+            } catch (e: Exception) {
+                e.printStackTrace()
+            }
         }
     }
 
     fun setArabicFontSize(size: Int) {
         viewModelScope.launch {
-            userPreferences.setArabicFontSize(size)
+            try {
+                userPreferences.setArabicFontSize(size)
+            } catch (e: Exception) {
+                e.printStackTrace()
+            }
         }
     }
 
     fun updateProfileImage(base64: String) {
         viewModelScope.launch {
-            userPreferences.setProfileImageBase64(base64)
+            try {
+                userPreferences.setProfileImageBase64(base64)
+            } catch (e: Exception) {
+                e.printStackTrace()
+            }
         }
     }
 }

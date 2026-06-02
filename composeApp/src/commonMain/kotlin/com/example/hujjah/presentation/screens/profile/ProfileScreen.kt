@@ -123,8 +123,14 @@ fun ProfileScreen(
                         contentAlignment = Alignment.Center
                     ) {
                         if (profileImageBase64.isNotEmpty()) {
+                            @OptIn(kotlin.io.encoding.ExperimentalEncodingApi::class)
+                            val imageBytes = try {
+                                Base64.decode(profileImageBase64)
+                            } catch (e: Exception) {
+                                null
+                            }
                             AsyncImage(
-                                model = "data:image/jpeg;base64,$profileImageBase64",
+                                model = imageBytes,
                                 contentDescription = "Profile Image",
                                 contentScale = ContentScale.Crop,
                                 modifier = Modifier.fillMaxSize().clip(CircleShape)
