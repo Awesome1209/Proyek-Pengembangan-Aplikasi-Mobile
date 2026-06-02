@@ -6,6 +6,7 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowBack
@@ -33,12 +34,14 @@ import com.example.hujjah.data.local.datastore.UserPreferences
 fun QuranDetailScreen(
     surahNumber: Int,
     surahName: String,
+    verseNumber: Int? = null,
     onNavigateBack: () -> Unit,
     viewModel: QuranViewModel = koinViewModel()
 ) {
     val detailUiState by viewModel.detailUiState.collectAsStateWithLifecycle()
     val lastRead by viewModel.lastReadLocation.collectAsStateWithLifecycle()
     val colors = LocalHujjahColors.current
+    val listState = rememberLazyListState()
     
     val userPreferences = koinInject<UserPreferences>()
     val arabicFontSize by userPreferences.arabicFontSize.collectAsStateWithLifecycle(initialValue = 22)
@@ -60,6 +63,18 @@ fun QuranDetailScreen(
         onDispose {
             if (activeSeconds > 0) {
                 viewModel.addReadingTime(activeSeconds)
+            }
+        }
+    }
+
+    // Auto-scroll to specific verse if requested
+    LaunchedEffect(detailUiState.verses, verseNumber) {
+        if (detailUiState.verses.isNotEmpty() && verseNumber != null) {
+            val index = detailUiState.verses.indexOfFirst { it.number == verseNumber }
+            if (index != -1) {
+                // Small delay to ensure layout is ready
+                delay(300)
+                listState.animateScrollToItem(index)
             }
         }
     }
@@ -149,6 +164,7 @@ fun QuranDetailScreen(
                     modifier = Modifier
                         .fillMaxWidth()
                         .weight(1f),
+                    state = listState,
                     verticalArrangement = Arrangement.spacedBy(20.dp),
                     contentPadding = PaddingValues(bottom = 24.dp)
                 ) {

@@ -16,6 +16,7 @@ import com.example.hujjah.presentation.screens.hadith.HadithScreen
 import com.example.hujjah.presentation.screens.profile.ProfileScreen
 import com.example.hujjah.presentation.screens.reference.ReferenceDetailScreen
 import com.example.hujjah.presentation.screens.result.HujjahResultScreen
+import com.example.hujjah.presentation.screens.splash.SplashScreen
 
 @Composable
 fun AppNavHost(
@@ -28,9 +29,20 @@ fun AppNavHost(
 
     NavHost(
         navController = navController,
-        startDestination = Route.Home,
+        startDestination = Route.Splash,
         modifier = modifier
     ) {
+        // ==================== SPLASH SCREEN ====================
+        composable<Route.Splash> {
+            SplashScreen(
+                onSplashFinished = {
+                    navController.navigate(Route.Home) {
+                        popUpTo(Route.Splash) { inclusive = true }
+                    }
+                }
+            )
+        }
+
         // ==================== 1. BERANDA (HOME) ====================
         composable<Route.Home> {
             HomeScreen(
@@ -51,6 +63,7 @@ fun AppNavHost(
                 onNavigateToHome = navigationActions::navigateToHome,
                 onNavigateToLens = navigationActions::navigateToHujjahLens,
                 onNavigateToQuran = navigationActions::navigateToQuran,
+                onNavigateToQuranDetail = navigationActions::navigateToQuranDetail,
                 onNavigateToHadith = navigationActions::navigateToHadith,
                 onNavigateToProfile = navigationActions::navigateToProfile,
                 onNavigateToBookmarks = navigationActions::navigateToBookmarks,
@@ -75,6 +88,7 @@ fun AppNavHost(
             QuranDetailScreen(
                 surahNumber = route.surahNumber,
                 surahName = route.surahName,
+                verseNumber = route.verseNumber,
                 onNavigateBack = navigationActions::navigateBack
             )
         }
@@ -167,8 +181,8 @@ private fun createNavigationActions(navController: NavHostController): Navigatio
             }
         }
 
-        override fun navigateToQuranDetail(surahNumber: Int, surahName: String) {
-            navController.navigate(Route.QuranDetail(surahNumber, surahName))
+        override fun navigateToQuranDetail(surahNumber: Int, surahName: String, verseNumber: Int?) {
+            navController.navigate(Route.QuranDetail(surahNumber, surahName, verseNumber))
         }
 
         override fun navigateToHadith() {
