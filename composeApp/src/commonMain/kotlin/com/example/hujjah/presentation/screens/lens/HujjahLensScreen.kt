@@ -49,6 +49,7 @@ fun HujjahLensScreen(
     onNavigateToProfile: () -> Unit,
     onNavigateToBookmarks: () -> Unit,
     onNavigateToResult: (String) -> Unit,
+    onNavigateToAddNote: (Long?, String?) -> Unit,
     viewModel: HujjahLensViewModel = koinViewModel()
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
@@ -271,37 +272,83 @@ fun HujjahLensScreen(
             },
             title = {
                 Text(
-                    text = "Hapus Pesan",
+                    text = "Opsi Pesan",
                     fontWeight = FontWeight.Bold,
-                    color = colors.islamicGreen
+                    color = colors.goldHighlight
                 )
             },
             text = {
-                Text("Hapus pesan ini dari riwayat obrolan lokal?")
-            },
-            confirmButton = {
-                Button(
-                    onClick = {
-                        viewModel.deleteMessage(selectedMessageForAction!!.id)
-                        showActionDialog = false
-                    },
-                    colors = ButtonDefaults.buttonColors(containerColor = colors.goldHighlight)
+                Column(
+                    verticalArrangement = Arrangement.spacedBy(8.dp),
+                    modifier = Modifier.fillMaxWidth()
                 ) {
-                    Row(verticalAlignment = Alignment.CenterVertically) {
-                        Icon(
-                            imageVector = Icons.Default.Delete,
-                            contentDescription = null,
-                            tint = MaterialTheme.colorScheme.background,
-                            modifier = Modifier.size(16.dp)
-                        )
-                        Spacer(modifier = Modifier.width(6.dp))
-                        Text(
-                            "Hapus",
-                            color = MaterialTheme.colorScheme.background
-                        )
+                    Text(
+                        text = "Pilih tindakan yang ingin Anda lakukan untuk pesan ini:",
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f),
+                        modifier = Modifier.padding(bottom = 8.dp)
+                    )
+                    
+                    // Opsi Simpan ke Catatan
+                    Surface(
+                        onClick = {
+                            showActionDialog = false
+                            onNavigateToAddNote(null, selectedMessageForAction!!.text)
+                        },
+                        shape = RoundedCornerShape(12.dp),
+                        color = colors.goldHighlight.copy(alpha = 0.1f),
+                        border = BorderStroke(1.dp, colors.goldHighlight.copy(alpha = 0.3f)),
+                        modifier = Modifier.fillMaxWidth()
+                    ) {
+                        Row(
+                            modifier = Modifier.padding(16.dp),
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Icon(
+                                imageVector = Icons.Default.Bookmark,
+                                contentDescription = null,
+                                tint = colors.goldHighlight
+                            )
+                            Spacer(modifier = Modifier.width(12.dp))
+                            Text(
+                                text = "Simpan ke Catatan Saya",
+                                fontWeight = FontWeight.SemiBold,
+                                color = colors.goldHighlight
+                            )
+                        }
+                    }
+                    
+                    // Opsi Hapus Pesan
+                    Surface(
+                        onClick = {
+                            viewModel.deleteMessage(selectedMessageForAction!!.id)
+                            showActionDialog = false
+                        },
+                        shape = RoundedCornerShape(12.dp),
+                        color = MaterialTheme.colorScheme.errorContainer.copy(alpha = 0.1f),
+                        border = BorderStroke(1.dp, MaterialTheme.colorScheme.error.copy(alpha = 0.3f)),
+                        modifier = Modifier.fillMaxWidth()
+                    ) {
+                        Row(
+                            modifier = Modifier.padding(16.dp),
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Icon(
+                                imageVector = Icons.Default.Delete,
+                                contentDescription = null,
+                                tint = MaterialTheme.colorScheme.error
+                            )
+                            Spacer(modifier = Modifier.width(12.dp))
+                            Text(
+                                text = "Hapus Pesan",
+                                fontWeight = FontWeight.SemiBold,
+                                color = MaterialTheme.colorScheme.error
+                            )
+                        }
                     }
                 }
             },
+            confirmButton = {},
             dismissButton = {
                 TextButton(onClick = {
                     showActionDialog = false
