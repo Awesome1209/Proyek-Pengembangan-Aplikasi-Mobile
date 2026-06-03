@@ -9,6 +9,7 @@ import com.example.hujjah.domain.model.islamic.SourceType
 import com.example.hujjah.domain.repository.AIRepository
 import com.example.hujjah.domain.repository.hujjah.BookmarkRepository
 import com.example.hujjah.domain.repository.hujjah.HujjahRepository
+import com.example.hujjah.core.network.NetworkMonitor
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -21,7 +22,8 @@ data class HujjahLensUiState(
     val messages: List<ChatMessage> = emptyList(),
     val inputText: String = "",
     val isLoading: Boolean = false,
-    val errorMessage: String? = null
+    val errorMessage: String? = null,
+    val isOffline: Boolean = false
 )
 
 @Serializable
@@ -45,7 +47,8 @@ private data class GeminiReferenceItem(
 class HujjahLensViewModel(
     private val hujjahRepository: HujjahRepository,
     private val aiRepository: AIRepository,
-    private val bookmarkRepository: BookmarkRepository
+    private val bookmarkRepository: BookmarkRepository,
+    private val networkMonitor: NetworkMonitor
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow(HujjahLensUiState())
@@ -58,6 +61,17 @@ class HujjahLensViewModel(
 
     init {
         loadChatHistory()
+        observeNetworkStatus()
+    }
+
+    private fun observeNetworkStatus() {
+        viewModelScope.launch {
+            networkMonitor.isOnline.collect { online ->
+                _uiState.value = _uiState.value.copy(
+                    isOffline = !online
+                )
+            }
+        }
     }
 
     private fun loadChatHistory() {
@@ -93,6 +107,20 @@ class HujjahLensViewModel(
             text = text,
             timestamp = Clock.System.now().toEpochMilliseconds()
         )
+
+        if (_uiState.value.isOffline) {
+            val offlineErrorMsg = ChatMessage(
+                id = "msg-${Clock.System.now().toEpochMilliseconds()}-err",
+                sender = Sender.AI,
+                text = "Koneksi internet terputus atau tidak stabil. Silakan periksa koneksi Anda dan coba lagi.",
+                timestamp = Clock.System.now().toEpochMilliseconds() + 50
+            )
+            viewModelScope.launch {
+                hujjahRepository.saveChatMessage(userMessage)
+                hujjahRepository.saveChatMessage(offlineErrorMsg)
+            }
+            return
+        }
 
         _uiState.value = _uiState.value.copy(
             inputText = "",
@@ -204,7 +232,18 @@ class HujjahLensViewModel(
                     _uiState.value = _uiState.value.copy(isLoading = false)
                 },
                 onFailure = { error ->
-                    val errorMessageText = if (error.message?.contains("429") == true || error.message?.contains("quota", ignoreCase = true) == true) {
+                    val errorName = error::class.simpleName ?: ""
+                    val isConnectionError = errorName.contains("Connect", ignoreCase = true) ||
+                            errorName.contains("Host", ignoreCase = true) ||
+                            errorName.contains("Socket", ignoreCase = true) ||
+                            errorName.contains("Timeout", ignoreCase = true) ||
+                            error.message?.contains("Connect", ignoreCase = true) == true ||
+                            error.message?.contains("resolve host", ignoreCase = true) == true ||
+                            error.message?.contains("Unable to resolve host", ignoreCase = true) == true
+
+                    val errorMessageText = if (isConnectionError) {
+                        "Koneksi internet terputus atau tidak stabil. Silakan periksa koneksi internet Anda dan coba lagi."
+                    } else if (error.message?.contains("429") == true || error.message?.contains("quota", ignoreCase = true) == true) {
                         "Kunci API (API Key) Anda telah mencapai batas limit penggunaan (Quota Exceeded). API Key Anda valid, namun jatah gratisnya sudah habis atau dinonaktifkan oleh Google. Silakan buat API Key baru dengan akun Google lain atau periksa tagihan di Google AI Studio."
                     } else {
                         "Maaf, terjadi kesalahan saat menghubungi server AI. Mohon pastikan API Key Gemini yang Anda masukkan benar dan valid. Detail: ${error.message}"

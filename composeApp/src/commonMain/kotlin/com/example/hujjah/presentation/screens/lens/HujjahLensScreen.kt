@@ -105,6 +105,31 @@ fun HujjahLensScreen(
                 .fillMaxSize()
                 .padding(paddingValues)
         ) {
+            if (uiState.isOffline) {
+                Card(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = 16.dp, vertical = 8.dp),
+                    colors = CardDefaults.cardColors(
+                        containerColor = MaterialTheme.colorScheme.errorContainer
+                    ),
+                    shape = RoundedCornerShape(12.dp)
+                ) {
+                    Row(
+                        modifier = Modifier.padding(12.dp),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Text(
+                            text = "☁️ Mode Luring: Anda hanya dapat membaca riwayat chat.",
+                            color = MaterialTheme.colorScheme.onErrorContainer,
+                            style = MaterialTheme.typography.bodySmall,
+                            fontWeight = FontWeight.Medium,
+                            modifier = Modifier.weight(1f)
+                        )
+                    }
+                }
+            }
+
             // ==================== CHAT HISTORY AREA ====================
             Box(
                 modifier = Modifier
@@ -195,7 +220,7 @@ fun HujjahLensScreen(
                         onValueChange = viewModel::onInputTextChanged,
                         placeholder = {
                             Text(
-                                "Curhat di sini...",
+                                if (uiState.isOffline) "Fitur chat tidak tersedia dalam mode luring" else "Curhat di sini...",
                                 fontSize = 14.sp,
                                 color = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.5f)
                             )
@@ -211,7 +236,8 @@ fun HujjahLensScreen(
                             unfocusedContainerColor = MaterialTheme.colorScheme.surface
                         ),
                         maxLines = 3,
-                        singleLine = false
+                        singleLine = false,
+                        enabled = !uiState.isOffline
                     )
 
                     IconButton(
@@ -223,8 +249,8 @@ fun HujjahLensScreen(
                         modifier = Modifier
                             .size(48.dp)
                             .clip(CircleShape)
-                            .background(colors.goldHighlight),
-                        enabled = uiState.inputText.isNotBlank() && !uiState.isLoading
+                            .background(if (uiState.isOffline) colors.goldHighlight.copy(alpha = 0.5f) else colors.goldHighlight),
+                        enabled = uiState.inputText.isNotBlank() && !uiState.isLoading && !uiState.isOffline
                     ) {
                         Icon(
                             imageVector = Icons.Default.Send,

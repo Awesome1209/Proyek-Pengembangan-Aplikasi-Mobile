@@ -18,6 +18,7 @@ import com.example.hujjah.presentation.screens.reference.ReferenceDetailScreen
 import com.example.hujjah.presentation.screens.result.HujjahResultScreen
 import com.example.hujjah.presentation.screens.splash.SplashScreen
 
+
 @Composable
 fun AppNavHost(
     navController: NavHostController = rememberNavController(),
@@ -32,6 +33,7 @@ fun AppNavHost(
         startDestination = Route.Splash,
         modifier = modifier
     ) {
+
         // ==================== SPLASH SCREEN ====================
         composable<Route.Splash> {
             SplashScreen(
@@ -42,6 +44,7 @@ fun AppNavHost(
                 }
             )
         }
+
 
         // ==================== 1. BERANDA (HOME) ====================
         composable<Route.Home> {
