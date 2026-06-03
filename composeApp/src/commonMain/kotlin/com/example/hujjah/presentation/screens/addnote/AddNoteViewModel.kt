@@ -28,9 +28,16 @@ class AddNoteViewModel(
     
     private val _events = MutableSharedFlow<AddNoteEvent>()
     val events: SharedFlow<AddNoteEvent> = _events.asSharedFlow()
-    
     private var currentNoteId: Long? = null
-    
+
+    fun initializeNote(noteId: Long?, initialContent: String?) {
+        if (noteId != null) {
+            loadNote(noteId)
+        } else if (!initialContent.isNullOrBlank()) {
+            _uiState.update { it.copy(content = initialContent, category = NoteCategory.STUDY) }
+        }
+    }
+
     fun loadNote(noteId: Long) {
         currentNoteId = noteId
         _uiState.update { it.copy(isLoading = true) }
