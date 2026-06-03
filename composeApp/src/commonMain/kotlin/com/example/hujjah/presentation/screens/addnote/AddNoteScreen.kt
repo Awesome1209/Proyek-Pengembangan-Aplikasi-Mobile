@@ -44,6 +44,7 @@ import org.koin.compose.viewmodel.koinViewModel
 @Composable
 fun AddNoteScreen(
     noteId: Long?,
+    initialContent: String? = null,
     onNavigateBack: () -> Unit,
     onNavigateToAI: (String) -> Unit,
     viewModel: AddNoteViewModel = koinViewModel()
@@ -51,8 +52,8 @@ fun AddNoteScreen(
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
     val snackbarHostState = remember { SnackbarHostState() }
     
-    LaunchedEffect(noteId) {
-        noteId?.let { viewModel.loadNote(it) }
+    LaunchedEffect(noteId, initialContent) {
+        viewModel.initializeNote(noteId, initialContent)
     }
     
     LaunchedEffect(Unit) {
