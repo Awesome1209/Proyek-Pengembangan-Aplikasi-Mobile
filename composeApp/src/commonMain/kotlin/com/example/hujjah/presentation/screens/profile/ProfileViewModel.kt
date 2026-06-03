@@ -40,6 +40,44 @@ class ProfileViewModel(
             initialValue = ""
         )
 
+    val readingDurationSeconds: StateFlow<Int> = userPreferences.readingDurationSeconds
+        .stateIn(
+            scope = viewModelScope,
+            started = SharingStarted.WhileSubscribed(5000),
+            initialValue = 0
+        )
+
+    val currentStreakDays: StateFlow<Int> = userPreferences.currentStreakDays
+        .stateIn(
+            scope = viewModelScope,
+            started = SharingStarted.WhileSubscribed(5000),
+            initialValue = 0
+        )
+
+    fun deleteProfileImage() {
+        viewModelScope.launch {
+            try {
+                userPreferences.setProfileImageBase64("")
+            } catch (e: Exception) {
+                e.printStackTrace()
+            }
+        }
+    }
+
+    fun logoutAndReset() {
+        viewModelScope.launch {
+            try {
+                userPreferences.setUserName("Hamba Allah")
+                userPreferences.setProfileImageBase64("")
+                userPreferences.setDarkMode(false)
+                userPreferences.setArabicFontSize(22)
+                userPreferences.resetReadingDuration()
+            } catch (e: Exception) {
+                e.printStackTrace()
+            }
+        }
+    }
+
     fun updateUserName(name: String) {
         viewModelScope.launch {
             try {
