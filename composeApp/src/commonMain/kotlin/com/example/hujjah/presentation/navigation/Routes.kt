@@ -35,6 +35,15 @@ sealed interface Route {
 
     @Serializable
     data object Bookmark : Route // Bookmark Khazanah
+
+    @Serializable
+    data object Notes : Route // Daftar Catatan
+
+    @Serializable
+    data class AddNote(val noteId: Long? = null, val initialContent: String? = null) : Route // Tambah/Edit Catatan
+
+    @Serializable
+    data class NoteDetail(val noteId: Long) : Route // Detail Catatan
 }
 
 interface NavigationActions {
@@ -47,5 +56,8 @@ interface NavigationActions {
     fun navigateToHujjahResult(topicId: String)
     fun navigateToReferenceDetail(referenceId: String)
     fun navigateToBookmarks()
+    fun navigateToNotes()
+    fun navigateToNoteDetail(noteId: Long)
+    fun navigateToAddNote(noteId: Long? = null, initialContent: String? = null)
     fun navigateBack()
 }
