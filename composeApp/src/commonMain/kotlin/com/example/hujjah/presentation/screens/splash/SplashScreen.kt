@@ -16,6 +16,8 @@ import org.jetbrains.compose.resources.painterResource
 import hujjah.composeapp.generated.resources.Res
 import hujjah.composeapp.generated.resources.logo_hujjah
 
+import androidx.compose.ui.layout.ContentScale
+
 @Composable
 fun SplashScreen(
     onSplashFinished: () -> Unit
@@ -34,7 +36,8 @@ fun SplashScreen(
         Image(
             painter = painterResource(Res.drawable.logo_hujjah),
             contentDescription = "Hujjah Logo",
-            modifier = Modifier.size(240.dp) // Sized nicely for screen centering
+            modifier = Modifier.fillMaxSize(),
+            contentScale = ContentScale.Crop
         )
     }
 }
