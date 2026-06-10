@@ -12,6 +12,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.clickable
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.font.FontStyle
@@ -40,6 +41,11 @@ import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
+import androidx.compose.material3.Slider
+import androidx.compose.material3.SliderDefaults
+import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.TextButton
+import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -49,10 +55,10 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import com.example.hujjah.domain.model.NoteCategory
-import com.example.hujjah.presentation.components.ColorPickerRow
 import com.example.hujjah.presentation.components.LoadingIndicator
 import com.example.hujjah.domain.repository.hujjah.HujjahRepository
+import com.example.hujjah.domain.model.islamic.SurahItem
+import com.example.hujjah.domain.model.islamic.HadithBookItem
 import com.example.hujjah.presentation.theme.LocalHujjahColors
 import org.koin.compose.viewmodel.koinViewModel
 import org.koin.compose.koinInject
@@ -85,6 +91,53 @@ fun AddNoteScreen(
 
     val hujjahRepository = koinInject<HujjahRepository>()
     val coroutineScope = rememberCoroutineScope()
+
+    // Dynamic reference count sync
+    var surahList by remember { mutableStateOf<List<SurahItem>>(emptyList()) }
+    var hadithBookList by remember { mutableStateOf<List<HadithBookItem>>(emptyList()) }
+    var showManualInputDialog by remember { mutableStateOf(false) }
+
+    LaunchedEffect(Unit) {
+        hujjahRepository.getSurahs(false).collect { list ->
+            surahList = list
+        }
+    }
+    LaunchedEffect(Unit) {
+        hujjahRepository.getHadithBooks(false).collect { list ->
+            hadithBookList = list
+        }
+    }
+
+    val selectedSurahItem = remember(refSource, surahList) {
+        surahList.find { it.name.equals(refSource, ignoreCase = true) }
+    }
+    val selectedHadithBookItem = remember(refSource, hadithBookList) {
+        hadithBookList.find { it.name.equals(refSource, ignoreCase = true) || it.id.equals(refSource, ignoreCase = true) }
+    }
+    val maxLimit = remember(selectedSurahItem, selectedHadithBookItem, referenceType, refSource) {
+        if (referenceType == "QURAN") {
+            selectedSurahItem?.numberOfVerses ?: 286
+        } else if (referenceType == "HADITH") {
+            selectedHadithBookItem?.totalHadith ?: 7563
+        } else {
+            1
+        }
+    }
+
+    val currentVal = remember(refNumber, maxLimit) {
+        refNumber.toIntOrNull()?.coerceIn(1, maxLimit) ?: 1
+    }
+
+    // Auto-select first surah/book if refSource is blank
+    LaunchedEffect(referenceType) {
+        if (referenceType == "QURAN" && (refSource.isBlank() || !quranSurahs.any { it.second.equals(refSource, ignoreCase = true) })) {
+            refSource = "Al-Fatihah"
+            refNumber = "1"
+        } else if (referenceType == "HADITH" && (refSource.isBlank() || !hadithBooks.any { it.second.equals(refSource, ignoreCase = true) || it.first.equals(refSource, ignoreCase = true) })) {
+            refSource = "Shahih Bukhari"
+            refNumber = "1"
+        }
+    }
 
     LaunchedEffect(noteId, initialContent) {
         viewModel.initializeNote(noteId, initialContent)
@@ -184,15 +237,24 @@ fun AddNoteScreen(
     }
     
     Scaffold(
+        containerColor = MaterialTheme.colorScheme.background,
         snackbarHost = { SnackbarHost(snackbarHostState) },
         topBar = {
             TopAppBar(
                 title = { 
-                    Text(if (uiState.isEditMode) "Edit Catatan" else "Catatan Baru")
+                    Text(
+                        text = if (uiState.isEditMode) "Edit Catatan" else "Catatan Baru",
+                        fontWeight = FontWeight.Bold,
+                        color = colors.goldHighlight
+                    )
                 },
                 navigationIcon = {
                     IconButton(onClick = onNavigateBack) {
-                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Kembali")
+                        Icon(
+                            imageVector = Icons.AutoMirrored.Filled.ArrowBack, 
+                            contentDescription = "Kembali",
+                            tint = colors.goldHighlight
+                        )
                     }
                 },
                 actions = {
@@ -200,7 +262,11 @@ fun AddNoteScreen(
                         onClick = { onNavigateToAI(uiState.content) },
                         enabled = uiState.content.isNotBlank()
                     ) {
-                        Icon(Icons.Outlined.AutoAwesome, contentDescription = "AI Assistant")
+                        Icon(
+                            imageVector = Icons.Outlined.AutoAwesome, 
+                            contentDescription = "AI Assistant",
+                            tint = if (uiState.content.isNotBlank()) colors.goldHighlight else colors.goldHighlight.copy(alpha = 0.4f)
+                        )
                     }
                     
                     IconButton(
@@ -217,9 +283,16 @@ fun AddNoteScreen(
                         },
                         enabled = (cleanContentText.isNotBlank() || uiState.title.isNotBlank()) && !uiState.isSaving
                     ) {
-                        Icon(Icons.Default.Check, contentDescription = "Simpan")
+                        Icon(
+                            imageVector = Icons.Default.Check, 
+                            contentDescription = "Simpan",
+                            tint = if ((cleanContentText.isNotBlank() || uiState.title.isNotBlank()) && !uiState.isSaving) colors.goldHighlight else colors.goldHighlight.copy(alpha = 0.4f)
+                        )
                     }
-                }
+                },
+                colors = TopAppBarDefaults.topAppBarColors(
+                    containerColor = MaterialTheme.colorScheme.background
+                )
             )
         }
     ) { paddingValues ->
@@ -241,6 +314,13 @@ fun AddNoteScreen(
                     singleLine = true,
                     isError = uiState.titleError != null,
                     supportingText = uiState.titleError?.let { { Text(it) } },
+                    shape = RoundedCornerShape(16.dp),
+                    colors = OutlinedTextFieldDefaults.colors(
+                        focusedBorderColor = colors.goldHighlight,
+                        unfocusedBorderColor = if (colors.isDarkTheme) Color(0xFF1E1E1E) else Color(0xFFE5E5E5),
+                        focusedContainerColor = MaterialTheme.colorScheme.surface,
+                        unfocusedContainerColor = MaterialTheme.colorScheme.surface
+                    ),
                     modifier = Modifier.fillMaxWidth()
                 )
                 
@@ -255,6 +335,13 @@ fun AddNoteScreen(
                     label = { Text("Konten") },
                     placeholder = { Text("Tulis catatan di sini...") },
                     minLines = 8,
+                    shape = RoundedCornerShape(16.dp),
+                    colors = OutlinedTextFieldDefaults.colors(
+                        focusedBorderColor = colors.goldHighlight,
+                        unfocusedBorderColor = if (colors.isDarkTheme) Color(0xFF1E1E1E) else Color(0xFFE5E5E5),
+                        focusedContainerColor = MaterialTheme.colorScheme.surface,
+                        unfocusedContainerColor = MaterialTheme.colorScheme.surface
+                    ),
                     modifier = Modifier.fillMaxWidth()
                 )
                 
@@ -266,7 +353,7 @@ fun AddNoteScreen(
                     colors = CardDefaults.cardColors(
                         containerColor = if (colors.isDarkTheme) Color.Black else MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.4f)
                     ),
-                    border = BorderStroke(1.dp, colors.goldHighlight.copy(alpha = 0.3f)),
+                    border = BorderStroke(0.5.dp, colors.goldHighlight.copy(alpha = 0.3f)),
                     modifier = Modifier.fillMaxWidth()
                 ) {
                     Column(modifier = Modifier.padding(16.dp)) {
@@ -299,72 +386,136 @@ fun AddNoteScreen(
                         
                         if (referenceType != "NONE") {
                             Spacer(modifier = Modifier.height(16.dp))
-                            Row(
-                                modifier = Modifier.fillMaxWidth(),
-                                horizontalArrangement = Arrangement.spacedBy(12.dp),
-                                verticalAlignment = Alignment.CenterVertically
+                            
+                            // 1. Selector Surah / Book (Dropdown)
+                            var dropdownExpanded by remember { mutableStateOf(false) }
+                            ExposedDropdownMenuBox(
+                                expanded = dropdownExpanded,
+                                onExpandedChange = { dropdownExpanded = it },
+                                modifier = Modifier.fillMaxWidth()
                             ) {
-                                var dropdownExpanded by remember { mutableStateOf(false) }
+                                OutlinedTextField(
+                                    value = refSource,
+                                    onValueChange = {},
+                                    readOnly = true,
+                                    label = { Text(if (referenceType == "QURAN") "Nama Surah" else "Nama Perawi/Kitab") },
+                                    trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = dropdownExpanded) },
+                                    shape = RoundedCornerShape(16.dp),
+                                    colors = OutlinedTextFieldDefaults.colors(
+                                        focusedBorderColor = colors.goldHighlight,
+                                        unfocusedBorderColor = if (colors.isDarkTheme) Color(0xFF1E1E1E) else Color(0xFFE5E5E5),
+                                        focusedContainerColor = MaterialTheme.colorScheme.surface,
+                                        unfocusedContainerColor = MaterialTheme.colorScheme.surface
+                                    ),
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .menuAnchor(MenuAnchorType.PrimaryNotEditable)
+                                )
                                 
-                                ExposedDropdownMenuBox(
+                                ExposedDropdownMenu(
                                     expanded = dropdownExpanded,
-                                    onExpandedChange = { dropdownExpanded = it },
-                                    modifier = Modifier.weight(1.5f)
+                                    onDismissRequest = { dropdownExpanded = false },
+                                    modifier = Modifier.heightIn(max = 250.dp)
                                 ) {
-                                    OutlinedTextField(
-                                        value = refSource,
-                                        onValueChange = {},
-                                        readOnly = true,
-                                        label = { Text(if (referenceType == "QURAN") "Nama Surah" else "Nama Perawi/Kitab") },
-                                        trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = dropdownExpanded) },
-                                        colors = OutlinedTextFieldDefaults.colors(
-                                            focusedBorderColor = colors.goldHighlight
-                                        ),
-                                        modifier = Modifier
-                                            .fillMaxWidth()
-                                            .menuAnchor(MenuAnchorType.PrimaryNotEditable)
-                                    )
-                                    
-                                    ExposedDropdownMenu(
-                                        expanded = dropdownExpanded,
-                                        onDismissRequest = { dropdownExpanded = false },
-                                        modifier = Modifier.heightIn(max = 250.dp)
-                                    ) {
-                                        if (referenceType == "QURAN") {
-                                            quranSurahs.forEach { (_, name) ->
-                                                DropdownMenuItem(
-                                                    text = { Text(name) },
-                                                    onClick = {
-                                                        refSource = name
-                                                        dropdownExpanded = false
-                                                    }
-                                                )
-                                            }
-                                        } else {
-                                            hadithBooks.forEach { (_, name) ->
-                                                DropdownMenuItem(
-                                                    text = { Text(name) },
-                                                    onClick = {
-                                                        refSource = name
-                                                        dropdownExpanded = false
-                                                    }
-                                                )
-                                            }
+                                    if (referenceType == "QURAN") {
+                                        quranSurahs.forEach { (_, name) ->
+                                            DropdownMenuItem(
+                                                text = { Text(name) },
+                                                onClick = {
+                                                    refSource = name
+                                                    dropdownExpanded = false
+                                                    refNumber = "1"
+                                                }
+                                            )
+                                        }
+                                    } else {
+                                        hadithBooks.forEach { (_, name) ->
+                                            DropdownMenuItem(
+                                                text = { Text(name) },
+                                                onClick = {
+                                                    refSource = name
+                                                    dropdownExpanded = false
+                                                    refNumber = "1"
+                                                }
+                                            )
                                         }
                                     }
                                 }
-                                
-                                OutlinedTextField(
-                                    value = refNumber,
-                                    onValueChange = { refNumber = it },
-                                    label = { Text(if (referenceType == "QURAN") "Nomor Ayat" else "Nomor Hadits") },
-                                    placeholder = { Text(if (referenceType == "QURAN") "286" else "123") },
-                                    singleLine = true,
-                                    modifier = Modifier.weight(1f),
-                                    colors = OutlinedTextFieldDefaults.colors(
-                                        focusedBorderColor = colors.goldHighlight
+                            }
+                            
+                            Spacer(modifier = Modifier.height(16.dp))
+                            
+                            // 2. Slider Controls for Verse/Hadith Number
+                            Column(modifier = Modifier.fillMaxWidth()) {
+                                Row(
+                                    modifier = Modifier.fillMaxWidth(),
+                                    horizontalArrangement = Arrangement.SpaceBetween,
+                                    verticalAlignment = Alignment.CenterVertically
+                                ) {
+                                    Text(
+                                        text = if (referenceType == "QURAN") "Ayat pilihan:" else "Hadits nomor:",
+                                        style = MaterialTheme.typography.bodyMedium,
+                                        color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f)
                                     )
-                                )
+                                    
+                                    Row(
+                                        verticalAlignment = Alignment.CenterVertically,
+                                        modifier = Modifier.clickable { showManualInputDialog = true }
+                                    ) {
+                                        Text(
+                                            text = "$currentVal / $maxLimit",
+                                            fontWeight = FontWeight.Bold,
+                                            color = colors.goldHighlight,
+                                            style = MaterialTheme.typography.titleMedium
+                                        )
+                                        Text(
+                                            text = " ✏️",
+                                            fontSize = 12.sp
+                                        )
+                                    }
+                                }
+                                
+                                Spacer(modifier = Modifier.height(8.dp))
+                                
+                                Row(
+                                    modifier = Modifier.fillMaxWidth(),
+                                    horizontalArrangement = Arrangement.spacedBy(8.dp),
+                                    verticalAlignment = Alignment.CenterVertically
+                                ) {
+                                    IconButton(
+                                        onClick = {
+                                            val newVal = (currentVal - 1).coerceAtLeast(1)
+                                            refNumber = newVal.toString()
+                                        },
+                                        enabled = currentVal > 1
+                                    ) {
+                                        Text("-", fontSize = 24.sp, fontWeight = FontWeight.Bold, color = colors.goldHighlight)
+                                    }
+                                    
+                                    Slider(
+                                        value = currentVal.toFloat(),
+                                        onValueChange = { floatVal ->
+                                            refNumber = floatVal.toInt().toString()
+                                        },
+                                        valueRange = 1f..maxLimit.toFloat(),
+                                        colors = SliderDefaults.colors(
+                                            thumbColor = colors.goldHighlight,
+                                            activeTrackColor = colors.goldHighlight,
+                                            inactiveTrackColor = colors.goldHighlight.copy(alpha = 0.2f)
+                                        ),
+                                        modifier = Modifier.weight(1f)
+                                    )
+                                    
+                                    IconButton(
+                                        onClick = {
+                                            val newVal = (currentVal + 1).coerceAtMost(maxLimit)
+                                            refNumber = newVal.toString()
+                                        },
+                                        enabled = currentVal < maxLimit
+                                    ) {
+                                        Text("+", fontSize = 20.sp, fontWeight = FontWeight.Bold, color = colors.goldHighlight)
+                                    }
+                                }
                             }
                             
                             // Live Preview Kutipan Rujukan
@@ -412,66 +563,66 @@ fun AddNoteScreen(
                 
                 Spacer(modifier = Modifier.height(16.dp))
                 
-                CategoryDropdown(
-                    selectedCategory = uiState.category,
-                    onCategorySelected = viewModel::onCategoryChange
-                )
-                
-                Spacer(modifier = Modifier.height(16.dp))
-                
-                Text(
-                    text = "Warna",
-                    style = MaterialTheme.typography.labelLarge
-                )
-                Spacer(modifier = Modifier.height(8.dp))
-                ColorPickerRow(
-                    selectedColor = uiState.color,
-                    onColorSelected = viewModel::onColorChange
+                OutlinedTextField(
+                    value = uiState.category,
+                    onValueChange = viewModel::onCategoryChange,
+                    label = { Text("Kategori (Opsional)") },
+                    placeholder = { Text("Ketik kategori baru...") },
+                    singleLine = true,
+                    shape = RoundedCornerShape(16.dp),
+                    colors = OutlinedTextFieldDefaults.colors(
+                        focusedBorderColor = colors.goldHighlight,
+                        unfocusedBorderColor = if (colors.isDarkTheme) Color(0xFF1E1E1E) else Color(0xFFE5E5E5),
+                        focusedContainerColor = MaterialTheme.colorScheme.surface,
+                        unfocusedContainerColor = MaterialTheme.colorScheme.surface
+                    ),
+                    modifier = Modifier.fillMaxWidth()
                 )
             }
         }
+    }
+
+    if (showManualInputDialog) {
+        var textInput by remember(refNumber) { mutableStateOf(refNumber) }
+        AlertDialog(
+            onDismissRequest = { showManualInputDialog = false },
+            title = { Text("Masukkan Nomor Secara Manual") },
+            text = {
+                Column {
+                    Text("Masukkan angka antara 1 dan $maxLimit:")
+                    Spacer(modifier = Modifier.height(8.dp))
+                    OutlinedTextField(
+                        value = textInput,
+                        onValueChange = { textInput = it.filter { char -> char.isDigit() } },
+                        singleLine = true,
+                        colors = OutlinedTextFieldDefaults.colors(
+                            focusedBorderColor = colors.goldHighlight
+                        )
+                    )
+                }
+            },
+            confirmButton = {
+                TextButton(
+                    onClick = {
+                        val typedVal = textInput.toIntOrNull()
+                        if (typedVal != null) {
+                            refNumber = typedVal.coerceIn(1, maxLimit).toString()
+                        }
+                        showManualInputDialog = false
+                    }
+                ) {
+                    Text("OK", color = colors.goldHighlight)
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = { showManualInputDialog = false }) {
+                    Text("Batal")
+                }
+            }
+        )
     }
 }
 
-@OptIn(ExperimentalMaterial3Api::class)
-@Composable
-private fun CategoryDropdown(
-    selectedCategory: NoteCategory,
-    onCategorySelected: (NoteCategory) -> Unit
-) {
-    var expanded by remember { mutableStateOf(false) }
-    
-    ExposedDropdownMenuBox(
-        expanded = expanded,
-        onExpandedChange = { expanded = it }
-    ) {
-        OutlinedTextField(
-            value = selectedCategory.displayName,
-            onValueChange = {},
-            readOnly = true,
-            label = { Text("Kategori") },
-            trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = expanded) },
-            modifier = Modifier
-                .fillMaxWidth()
-                .menuAnchor(MenuAnchorType.PrimaryNotEditable)
-        )
-        
-        ExposedDropdownMenu(
-            expanded = expanded,
-            onDismissRequest = { expanded = false }
-        ) {
-            NoteCategory.entries.forEach { category ->
-                DropdownMenuItem(
-                    text = { Text(category.displayName) },
-                    onClick = {
-                        onCategorySelected(category)
-                        expanded = false
-                    }
-                )
-            }
-        }
-    }
-}
 
 private val quranSurahs = listOf(
     Pair(1, "Al-Fatihah"), Pair(2, "Al-Baqarah"), Pair(3, "Ali 'Imran"), Pair(4, "An-Nisa'"),

@@ -163,7 +163,7 @@ fun NoteDetailScreen(
                         modifier = Modifier.fillMaxWidth(),
                         horizontalArrangement = Arrangement.spacedBy(8.dp)
                     ) {
-                        CategoryBadge(category = state.note.category.displayName)
+                        CategoryBadge(category = state.note.category)
                         
                         Text(
                             text = state.note.updatedAt.formatToDisplay(),

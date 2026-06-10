@@ -3,7 +3,6 @@ package com.example.hujjah.presentation.screens.notes
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.hujjah.domain.model.Note
-import com.example.hujjah.domain.model.NoteCategory
 import com.example.hujjah.domain.repository.NoteRepository
 import com.example.hujjah.domain.usecase.DeleteNoteUseCase
 import com.example.hujjah.domain.usecase.GetAllNotesUseCase
@@ -23,13 +22,15 @@ import kotlinx.coroutines.launch
 data class NotesUiState(
     val notes: List<Note> = emptyList(),
     val searchQuery: String = "",
-    val selectedCategory: NoteCategory? = null,
+    val selectedCategory: String? = null,
     val isLoading: Boolean = false,
-    val error: String? = null
+    val error: String? = null,
+    val categories: List<String> = emptyList()
 )
 
 sealed interface NotesEvent {
-    data class Error(val message: String) : NotesEvent
+    val message: String? get() = null // default fallback
+    data class Error(override val message: String) : NotesEvent
     data object NotePinnedToggled : NotesEvent
     data object NoteDeleted : NotesEvent
 }
@@ -48,7 +49,7 @@ class NotesViewModel(
     val events: SharedFlow<NotesEvent> = _events.asSharedFlow()
 
     private val _searchQuery = MutableStateFlow("")
-    private val _selectedCategory = MutableStateFlow<NoteCategory?>(null)
+    private val _selectedCategory = MutableStateFlow<String?>(null)
 
     init {
         loadNotes()
@@ -57,6 +58,16 @@ class NotesViewModel(
     private fun loadNotes() {
         _uiState.update { it.copy(isLoading = true) }
         viewModelScope.launch {
+            launch {
+                getAllNotesUseCase().collect { allNotes ->
+                    val distinctCategories = allNotes
+                        .map { it.category }
+                        .filter { it.isNotBlank() }
+                        .distinct()
+                    _uiState.update { it.copy(categories = distinctCategories) }
+                }
+            }
+
             combine(
                 _searchQuery.debounce(200).distinctUntilChanged(),
                 _selectedCategory
@@ -83,7 +94,7 @@ class NotesViewModel(
         _uiState.update { it.copy(searchQuery = query) }
     }
 
-    fun onCategorySelected(category: NoteCategory?) {
+    fun onCategorySelected(category: String?) {
         _selectedCategory.value = category
         _uiState.update { it.copy(selectedCategory = category) }
     }

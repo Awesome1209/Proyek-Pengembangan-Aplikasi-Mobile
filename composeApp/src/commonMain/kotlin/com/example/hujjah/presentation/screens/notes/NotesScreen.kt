@@ -30,7 +30,6 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import com.example.hujjah.domain.model.NoteCategory
 import com.example.hujjah.core.util.formatToDisplay
 import com.example.hujjah.presentation.components.LoadingIndicator
 import com.example.hujjah.presentation.components.NoteCard
@@ -151,12 +150,12 @@ fun NotesScreen(
                     )
                 }
 
-                items(NoteCategory.entries) { category ->
+                items(uiState.categories) { category ->
                     val isSelected = uiState.selectedCategory == category
                     FilterChip(
                         selected = isSelected,
                         onClick = { viewModel.onCategorySelected(category) },
-                        label = { Text(category.displayName) },
+                        label = { Text(category) },
                         colors = FilterChipDefaults.filterChipColors(
                             selectedContainerColor = colors.goldHighlight,
                             selectedLabelColor = MaterialTheme.colorScheme.background
@@ -300,7 +299,7 @@ private fun HujjahNoteCard(
                             .padding(horizontal = 8.dp, vertical = 4.dp)
                     ) {
                         Text(
-                            text = note.category.displayName,
+                            text = note.category,
                             fontSize = 10.sp,
                             fontWeight = FontWeight.Bold,
                             color = colors.islamicGreen
