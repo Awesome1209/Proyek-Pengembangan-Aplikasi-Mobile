@@ -30,7 +30,11 @@ Melalui Hujjah Lens, pengguna dapat menuliskan kondisi curhatan atau cerita yang
 
 ## Vidio Demo
 
-https://youtube.com/shorts/rr8zjp12_hg
+<div align="center">
+  <a href="https://www.youtube.com/watch?v=rr8zjp12_hg">
+    <img src="https://img.youtube.com/vi/rr8zjp12_hg/0.jpg" alt="Preview Aplikasi Mobile AI Islami" width="300">
+  </a>
+</div>
 
 ### Sprint 2
 
