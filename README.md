@@ -2,6 +2,8 @@
 
 ![CI](https://github.com/Awesome1209/Proyek-Pengembangan-Aplikasi-Mobile/actions/workflows/ci.yml/badge.svg)
 
+## Logo
+
 ## 📌 Project Overview
 
 **Hujjah** adalah aplikasi mobile referensi Islam berbasis AI yang membantu pengguna membaca Al-Qur’an dan hadis secara manual, serta menemukan dalil berdasarkan kondisi sehari-hari melalui fitur **Hujjah Lens**.
