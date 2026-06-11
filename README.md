@@ -708,7 +708,7 @@ Untuk persoalan hukum agama yang kompleks, pengguna dianjurkan bertanya kepada u
 
 ---
 
-## Vidio Sprint 
+## Vidio Sprint
 
 ### Sprint 2
 
@@ -718,6 +718,9 @@ https://github.com/user-attachments/assets/8bc1e5dd-0d35-47af-b859-5827582aedf7
 
 https://github.com/user-attachments/assets/3a352384-808b-4a4b-9306-eee70b3a3b75
 
+## Vidio Demo
+
+https://s.itera.id/Video-Demo-Akhir-PAM-RB-Drive
 
 ## 📄 License
 
