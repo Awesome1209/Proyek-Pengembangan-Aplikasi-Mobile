@@ -26,6 +26,9 @@
             </intent-filter>
         </activity>
         
+        <!-- Diperlukan untuk Compose UI Testing dengan Robolectric -->
+        <activity android:name="androidx.activity.ComponentActivity" />
+        
     </application>
     
 </manifest>

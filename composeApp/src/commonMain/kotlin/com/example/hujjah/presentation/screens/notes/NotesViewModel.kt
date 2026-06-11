@@ -16,8 +16,11 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.debounce
 import kotlinx.coroutines.flow.distinctUntilChanged
+import kotlinx.coroutines.flow.flatMapLatest
+import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.ExperimentalCoroutinesApi
 
 data class NotesUiState(
     val notes: List<Note> = emptyList(),
@@ -35,6 +38,7 @@ sealed interface NotesEvent {
     data object NoteDeleted : NotesEvent
 }
 
+@OptIn(ExperimentalCoroutinesApi::class)
 class NotesViewModel(
     private val repository: NoteRepository,
     private val getAllNotesUseCase: GetAllNotesUseCase,
@@ -73,17 +77,19 @@ class NotesViewModel(
                 _selectedCategory
             ) { query, category ->
                 query to category
-            }.collect { (query, category) ->
-                searchNotesUseCase(query, category).collect { notesList ->
-                    _uiState.update {
-                        it.copy(
-                            notes = notesList,
-                            searchQuery = query,
-                            selectedCategory = category,
-                            isLoading = false,
-                            error = null
-                        )
-                    }
+            }.flatMapLatest { (query, category) ->
+                searchNotesUseCase(query, category).map { notesList ->
+                    Triple(notesList, query, category)
+                }
+            }.collect { (notesList, query, category) ->
+                _uiState.update {
+                    it.copy(
+                        notes = notesList,
+                        searchQuery = query,
+                        selectedCategory = category,
+                        isLoading = false,
+                        error = null
+                    )
                 }
             }
         }
