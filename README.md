@@ -4,6 +4,10 @@
 
 ## Logo
 
+<p align="center">
+<img width="300" height="300" alt="Presentation (1)" src="https://github.com/user-attachments/assets/f004c87f-19c4-474d-807c-6bf0c1dca7c7" />
+</p>
+
 ## 📌 Project Overview
 
 **Hujjah** adalah aplikasi mobile referensi Islam berbasis AI yang membantu pengguna membaca Al-Qur’an dan hadis secara manual, serta menemukan dalil berdasarkan kondisi sehari-hari melalui fitur **Hujjah Lens**.
