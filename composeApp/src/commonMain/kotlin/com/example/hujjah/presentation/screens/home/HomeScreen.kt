@@ -468,7 +468,7 @@ private fun ReadingRitualSection(
                         horizontalArrangement = Arrangement.spacedBy(4.dp)
                     ) {
                         Text(
-                            text = "🔄 Reset Progres",
+                            text = "Reset Progres",
                             style = MaterialTheme.typography.labelSmall,
                             fontWeight = FontWeight.SemiBold,
                             color = warmGrayColor
