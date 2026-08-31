@@ -24,6 +24,7 @@ import androidx.compose.material.icons.filled.Notifications
 import androidx.compose.material.icons.filled.Pause
 import androidx.compose.material.icons.filled.PlayArrow
 import androidx.compose.material.icons.outlined.LocalFireDepartment
+import androidx.compose.material.icons.outlined.Timer
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -762,13 +763,24 @@ private fun EditorialDailyQuote(
                     color = goldHighlight.copy(alpha = 0.15f),
                     shape = RoundedCornerShape(12.dp)
                 ) {
-                    Text(
-                        text = "⏳ Rotasi 1m",
-                        fontSize = 10.sp,
-                        fontWeight = FontWeight.Bold,
-                        color = goldHighlight,
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
                         modifier = Modifier.padding(horizontal = 8.dp, vertical = 3.dp)
-                    )
+                    ) {
+                        Icon(
+                            imageVector = Icons.Outlined.Timer,
+                            contentDescription = null,
+                            tint = goldHighlight,
+                            modifier = Modifier.size(12.dp)
+                        )
+                        Spacer(modifier = Modifier.width(4.dp))
+                        Text(
+                            text = "Rotasi 1m",
+                            fontSize = 10.sp,
+                            fontWeight = FontWeight.Bold,
+                            color = goldHighlight
+                        )
+                    }
                 }
             }
 

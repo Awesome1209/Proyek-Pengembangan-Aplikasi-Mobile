@@ -18,6 +18,14 @@ import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.FileDownload
 import androidx.compose.material.icons.filled.Share
+import androidx.compose.material.icons.outlined.AutoAwesome
+import androidx.compose.material.icons.outlined.Equalizer
+import androidx.compose.material.icons.outlined.LocalFireDepartment
+import androidx.compose.material.icons.outlined.MenuBook
+import androidx.compose.material.icons.outlined.Park
+import androidx.compose.material.icons.outlined.PushPin
+import androidx.compose.material.icons.outlined.TrendingUp
+import androidx.compose.material.icons.outlined.Waves
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -30,6 +38,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Path
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.graphics.drawscope.withTransform
+import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.text.font.FontStyle
 import androidx.compose.ui.text.font.FontWeight
@@ -56,14 +65,14 @@ import kotlinx.datetime.TimeZone
 import kotlinx.datetime.toLocalDateTime
 import org.koin.compose.koinInject
 
-enum class SharePosterMode(val label: String, val icon: String) {
-    SESI("Sesi Ini", "📌"),
-    TOTAL_HARIAN("Total Harian", "📊")
+enum class SharePosterMode(val label: String, val iconVector: ImageVector) {
+    SESI("Sesi Ini", Icons.Outlined.PushPin),
+    TOTAL_HARIAN("Total Harian", Icons.Outlined.Equalizer)
 }
 
 enum class PosterTheme(
     val title: String,
-    val icon: String,
+    val iconVector: ImageVector,
     val quote: String,
     val labelItems: String,
     val labelDuration: String,
@@ -72,7 +81,7 @@ enum class PosterTheme(
 ) {
     POHON(
         title = "Pohon Surga",
-        icon = "🌳",
+        iconVector = Icons.Outlined.Park,
         quote = "Setiap ayat yang dibaca kelak tumbuh menjadi pohon rindang di Surga. (HR. Tirmidzi)",
         labelItems = "BANYAK AYAT & HADITS",
         labelDuration = "BANYAK WAKTU",
@@ -81,7 +90,7 @@ enum class PosterTheme(
     ),
     NUR(
         title = "Rasi Nur",
-        icon = "🌌",
+        iconVector = Icons.Outlined.AutoAwesome,
         quote = "Al-Qur'an adalah cahaya di bumi dan simpanan di langit. (HR. Ath-Thabrani)",
         labelItems = "PANCARAN AYAT & HADITS",
         labelDuration = "BANYAK WAKTU BERSINAR",
@@ -90,7 +99,7 @@ enum class PosterTheme(
     ),
     SAMUDRA(
         title = "Samudra Wave",
-        icon = "📜",
+        iconVector = Icons.Outlined.Waves,
         quote = "Sekiranya lautan menjadi tinta untuk kalimat Tuhanku... (QS. Al-Kahf: 109)",
         labelItems = "BANYAK AYAT & HADITS",
         labelDuration = "BANYAK WAKTU SELAM",
@@ -99,7 +108,7 @@ enum class PosterTheme(
     ),
     TANGGA(
         title = "Tangga Manazil",
-        icon = "🪜",
+        iconVector = Icons.Outlined.TrendingUp,
         quote = "Bacalah dan naiklah! Kedudukanmu pada akhir ayat yang dibaca. (HR. Abu Daud)",
         labelItems = "BANYAK TANGGA AYAT",
         labelDuration = "BANYAK WAKTU PENDAKIAN",
@@ -209,7 +218,6 @@ fun TilawahSharePosterDialog(
     }
 
     // Active Metrics based on selected Share Mode (Sesi Ini vs Total Harian)
-    val activeTitleBadge = if (selectedShareMode == SharePosterMode.SESI) "📌 SESI TILAWAH • $sessionTimeFormatted" else "✨ TOTAL HARIAN ${sessionLog.dateString}"
     val activeTitleText = if (selectedShareMode == SharePosterMode.SESI) sessionLog.title else "Jurnal ${sessionLog.dateString}"
     val activeItemsText = if (selectedShareMode == SharePosterMode.SESI) sessionItemLabel else dailyItemSummaryLabel
     val activeDurationText = if (selectedShareMode == SharePosterMode.SESI) sessionDurationFormatted else dailyDurationFormatted
@@ -286,11 +294,22 @@ fun TilawahSharePosterDialog(
                             ),
                             elevation = ButtonDefaults.buttonElevation(defaultElevation = if (isSelected) 2.dp else 0.dp)
                         ) {
-                            Text(
-                                text = "${mode.icon} ${mode.label}",
-                                fontSize = 11.sp,
-                                fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Medium
-                            )
+                            Row(
+                                verticalAlignment = Alignment.CenterVertically,
+                                horizontalArrangement = Arrangement.spacedBy(4.dp)
+                            ) {
+                                Icon(
+                                    imageVector = mode.iconVector,
+                                    contentDescription = null,
+                                    tint = if (isSelected) Color.Black else colors.goldHighlight,
+                                    modifier = Modifier.size(14.dp)
+                                )
+                                Text(
+                                    text = mode.label,
+                                    fontSize = 11.sp,
+                                    fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Medium
+                                )
+                            }
                         }
                     }
                 }
@@ -311,11 +330,22 @@ fun TilawahSharePosterDialog(
                             selected = isSelected,
                             onClick = { selectedTheme = theme },
                             label = {
-                                Text(
-                                    text = "${theme.icon} ${theme.title}",
-                                    fontSize = 11.sp,
-                                    fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Medium
-                                )
+                                Row(
+                                    verticalAlignment = Alignment.CenterVertically,
+                                    horizontalArrangement = Arrangement.spacedBy(4.dp)
+                                ) {
+                                    Icon(
+                                        imageVector = theme.iconVector,
+                                        contentDescription = null,
+                                        tint = if (isSelected) Color.Black else colors.goldHighlight,
+                                        modifier = Modifier.size(14.dp)
+                                    )
+                                    Text(
+                                        text = theme.title,
+                                        fontSize = 11.sp,
+                                        fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Medium
+                                    )
+                                }
                             },
                             colors = FilterChipDefaults.filterChipColors(
                                 selectedContainerColor = colors.goldHighlight,
@@ -481,7 +511,12 @@ fun TilawahSharePosterDialog(
                                     modifier = Modifier.padding(horizontal = 10.dp, vertical = 4.dp),
                                     verticalAlignment = Alignment.CenterVertically
                                 ) {
-                                    Text(text = "🔥", fontSize = 12.sp)
+                                    Icon(
+                                        imageVector = Icons.Outlined.LocalFireDepartment,
+                                        contentDescription = null,
+                                        tint = colors.goldHighlight,
+                                        modifier = Modifier.size(14.dp)
+                                    )
                                     Spacer(modifier = Modifier.width(4.dp))
                                     Text(
                                         text = "$streakDays Hari Istiqamah",
@@ -502,13 +537,24 @@ fun TilawahSharePosterDialog(
                                 color = Color.White.copy(alpha = 0.15f),
                                 shape = RoundedCornerShape(8.dp)
                             ) {
-                                Text(
-                                    text = activeTitleBadge,
-                                    fontSize = 10.sp,
-                                    fontWeight = FontWeight.Bold,
-                                    color = Color.White,
+                                Row(
+                                    verticalAlignment = Alignment.CenterVertically,
                                     modifier = Modifier.padding(horizontal = 10.dp, vertical = 4.dp)
-                                )
+                                ) {
+                                    Icon(
+                                        imageVector = if (selectedShareMode == SharePosterMode.SESI) Icons.Outlined.PushPin else Icons.Outlined.AutoAwesome,
+                                        contentDescription = null,
+                                        tint = Color.White,
+                                        modifier = Modifier.size(12.dp)
+                                    )
+                                    Spacer(modifier = Modifier.width(4.dp))
+                                    Text(
+                                        text = if (selectedShareMode == SharePosterMode.SESI) "SESI TILAWAH • $sessionTimeFormatted" else "TOTAL HARIAN ${sessionLog.dateString}",
+                                        fontSize = 10.sp,
+                                        fontWeight = FontWeight.Bold,
+                                        color = Color.White
+                                    )
+                                }
                             }
 
                             Spacer(modifier = Modifier.height(10.dp))

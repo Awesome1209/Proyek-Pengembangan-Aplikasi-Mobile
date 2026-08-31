@@ -13,10 +13,20 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ChevronRight
 import androidx.compose.material.icons.filled.ExpandLess
 import androidx.compose.material.icons.filled.ExpandMore
+import androidx.compose.material.icons.outlined.AccessTime
+import androidx.compose.material.icons.outlined.AccountBalanceWallet
+import androidx.compose.material.icons.outlined.AutoAwesome
 import androidx.compose.material.icons.outlined.BookmarkBorder
 import androidx.compose.material.icons.outlined.ChatBubbleOutline
 import androidx.compose.material.icons.outlined.Description
 import androidx.compose.material.icons.outlined.Explore
+import androidx.compose.material.icons.outlined.Home
+import androidx.compose.material.icons.outlined.LocalFireDepartment
+import androidx.compose.material.icons.outlined.MenuBook
+import androidx.compose.material.icons.outlined.SelfImprovement
+import androidx.compose.material.icons.outlined.Shield
+import androidx.compose.material.icons.outlined.Spa
+import androidx.compose.material.icons.outlined.WbSunny
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -288,6 +298,20 @@ private fun TopicChipCard(
     goldHighlight: androidx.compose.ui.graphics.Color,
     modifier: Modifier = Modifier
 ) {
+    val topicIconVector = when(topic.id) {
+        "anger" -> Icons.Outlined.LocalFireDepartment
+        "calm" -> Icons.Outlined.Spa
+        "sabr" -> Icons.Outlined.SelfImprovement
+        "taubah" -> Icons.Outlined.AutoAwesome
+        "syukur" -> Icons.Outlined.WbSunny
+        "shalat" -> Icons.Outlined.AccessTime
+        "tawakkal_cemas" -> Icons.Outlined.Shield
+        "ilmu" -> Icons.Outlined.MenuBook
+        "parents" -> Icons.Outlined.Home
+        "rezeki" -> Icons.Outlined.AccountBalanceWallet
+        else -> Icons.Outlined.AutoAwesome
+    }
+
     Surface(
         modifier = modifier.clickable(onClick = onClick),
         shape = RoundedCornerShape(12.dp),
@@ -298,7 +322,12 @@ private fun TopicChipCard(
             modifier = Modifier.padding(10.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
-            Text(text = topic.icon, fontSize = 18.sp)
+            Icon(
+                imageVector = topicIconVector,
+                contentDescription = topic.title,
+                tint = goldHighlight,
+                modifier = Modifier.size(20.dp)
+            )
             Spacer(modifier = Modifier.width(8.dp))
             Column {
                 Text(

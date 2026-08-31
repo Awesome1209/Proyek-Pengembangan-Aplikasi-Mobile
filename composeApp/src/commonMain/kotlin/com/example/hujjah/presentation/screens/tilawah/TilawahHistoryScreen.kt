@@ -44,6 +44,11 @@ import kotlinx.datetime.minus
 import kotlinx.datetime.toLocalDateTime
 import org.koin.compose.koinInject
 
+import androidx.compose.material.icons.outlined.CollectionsBookmark
+import androidx.compose.material.icons.outlined.LocalFireDepartment
+import androidx.compose.material.icons.outlined.MenuBook
+import androidx.compose.material.icons.outlined.Schedule
+
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun TilawahHistoryScreen(
@@ -139,7 +144,12 @@ fun TilawahHistoryScreen(
                                 verticalAlignment = Alignment.CenterVertically
                             ) {
                                 Row(verticalAlignment = Alignment.CenterVertically) {
-                                    Text(text = "🔥", fontSize = 24.sp)
+                                    Icon(
+                                        imageVector = Icons.Outlined.LocalFireDepartment,
+                                        contentDescription = "Streak",
+                                        tint = colors.goldHighlight,
+                                        modifier = Modifier.size(24.dp)
+                                    )
                                     Spacer(modifier = Modifier.width(8.dp))
                                     Column {
                                         Text(
@@ -325,26 +335,48 @@ fun TilawahHistoryScreen(
                                             color = colors.goldHighlight.copy(alpha = 0.12f),
                                             shape = RoundedCornerShape(6.dp)
                                         ) {
-                                            Text(
-                                                text = if (log.sourceType == TilawahSourceType.QURAN) "📖 AL-QUR'AN" else "📚 HADITS PERAWI",
-                                                fontSize = 10.sp,
-                                                fontWeight = FontWeight.Bold,
-                                                color = colors.goldHighlight,
+                                            Row(
+                                                verticalAlignment = Alignment.CenterVertically,
                                                 modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp)
-                                            )
+                                            ) {
+                                                Icon(
+                                                    imageVector = if (log.sourceType == TilawahSourceType.QURAN) Icons.Outlined.MenuBook else Icons.Outlined.CollectionsBookmark,
+                                                    contentDescription = null,
+                                                    tint = colors.goldHighlight,
+                                                    modifier = Modifier.size(12.dp)
+                                                )
+                                                Spacer(modifier = Modifier.width(4.dp))
+                                                Text(
+                                                    text = if (log.sourceType == TilawahSourceType.QURAN) "AL-QUR'AN" else "HADITS PERAWI",
+                                                    fontSize = 10.sp,
+                                                    fontWeight = FontWeight.Bold,
+                                                    color = colors.goldHighlight
+                                                )
+                                            }
                                         }
 
                                         Surface(
                                             color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f),
                                             shape = RoundedCornerShape(6.dp)
                                         ) {
-                                            Text(
-                                                text = "⏰ $sessionTimeFormatted",
-                                                fontSize = 10.sp,
-                                                fontWeight = FontWeight.SemiBold,
-                                                color = warmGrayColor,
+                                            Row(
+                                                verticalAlignment = Alignment.CenterVertically,
                                                 modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp)
-                                            )
+                                            ) {
+                                                Icon(
+                                                    imageVector = Icons.Outlined.Schedule,
+                                                    contentDescription = null,
+                                                    tint = warmGrayColor,
+                                                    modifier = Modifier.size(12.dp)
+                                                )
+                                                Spacer(modifier = Modifier.width(4.dp))
+                                                Text(
+                                                    text = sessionTimeFormatted,
+                                                    fontSize = 10.sp,
+                                                    fontWeight = FontWeight.SemiBold,
+                                                    color = warmGrayColor
+                                                )
+                                            }
                                         }
                                     }
 
