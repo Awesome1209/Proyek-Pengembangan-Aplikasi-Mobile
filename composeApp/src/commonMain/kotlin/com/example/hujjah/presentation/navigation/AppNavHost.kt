@@ -13,6 +13,7 @@ import com.example.hujjah.presentation.screens.lens.HujjahLensScreen
 import com.example.hujjah.presentation.screens.quran.QuranScreen
 import com.example.hujjah.presentation.screens.quran.QuranDetailScreen
 import com.example.hujjah.presentation.screens.hadith.HadithScreen
+import com.example.hujjah.presentation.screens.koleksi.KoleksiScreen
 import com.example.hujjah.presentation.screens.profile.ProfileScreen
 import com.example.hujjah.presentation.screens.reference.ReferenceDetailScreen
 import com.example.hujjah.presentation.screens.result.HujjahResultScreen
@@ -28,8 +29,6 @@ fun AppNavHost(
     modifier: Modifier = Modifier
 ) {
     val navigationActions = createNavigationActions(navController)
-    val demoTopicId = "anger"
-    val demoReferenceId = "quran-ali-imran-134"
 
     NavHost(
         navController = navController,
@@ -56,6 +55,8 @@ fun AppNavHost(
                 onNavigateToLens = navigationActions::navigateToHujjahLens,
                 onNavigateToQuran = navigationActions::navigateToQuran,
                 onNavigateToHadith = navigationActions::navigateToHadith,
+                onNavigateToKoleksi = navigationActions::navigateToKoleksi,
+                onNavigateToTilawahHistory = navigationActions::navigateToTilawahHistory,
                 onNavigateToProfile = navigationActions::navigateToProfile,
                 onNavigateToAddNote = {},
                 onNavigateToDetail = {},
@@ -71,6 +72,7 @@ fun AppNavHost(
                 onNavigateToQuran = navigationActions::navigateToQuran,
                 onNavigateToQuranDetail = navigationActions::navigateToQuranDetail,
                 onNavigateToHadith = navigationActions::navigateToHadith,
+                onNavigateToKoleksi = navigationActions::navigateToKoleksi,
                 onNavigateToProfile = navigationActions::navigateToProfile,
                 onNavigateToBookmarks = navigationActions::navigateToBookmarks,
                 onNavigateToResult = navigationActions::navigateToHujjahResult,
@@ -85,6 +87,7 @@ fun AppNavHost(
                 onNavigateToLens = navigationActions::navigateToHujjahLens,
                 onNavigateToQuran = navigationActions::navigateToQuran,
                 onNavigateToHadith = navigationActions::navigateToHadith,
+                onNavigateToKoleksi = navigationActions::navigateToKoleksi,
                 onNavigateToProfile = navigationActions::navigateToProfile,
                 onNavigateToDetail = navigationActions::navigateToQuranDetail
             )
@@ -107,13 +110,30 @@ fun AppNavHost(
                 onNavigateToLens = navigationActions::navigateToHujjahLens,
                 onNavigateToQuran = navigationActions::navigateToQuran,
                 onNavigateToHadith = navigationActions::navigateToHadith,
+                onNavigateToKoleksi = navigationActions::navigateToKoleksi,
                 onNavigateToProfile = navigationActions::navigateToProfile
             )
         }
 
-        // ==================== 5. PROFIL ====================
+        // ==================== 5. KOLEKSI (HUB) ====================
+        composable<Route.Koleksi> {
+            KoleksiScreen(
+                onNavigateToHome = navigationActions::navigateToHome,
+                onNavigateToLens = navigationActions::navigateToHujjahLens,
+                onNavigateToQuran = navigationActions::navigateToQuran,
+                onNavigateToHadith = navigationActions::navigateToHadith,
+                onNavigateToKoleksi = navigationActions::navigateToKoleksi,
+                onNavigateToBookmarks = navigationActions::navigateToBookmarks,
+                onNavigateToNotes = navigationActions::navigateToNotes,
+                onNavigateToTilawahHistory = navigationActions::navigateToTilawahHistory,
+                onNavigateToResult = navigationActions::navigateToHujjahResult
+            )
+        }
+
+        // ==================== PROFIL (NESTED DESTINATION FROM HOME) ====================
         composable<Route.Profile> {
             ProfileScreen(
+                onNavigateBack = navigationActions::navigateBack,
                 onNavigateToHome = navigationActions::navigateToHome,
                 onNavigateToLens = navigationActions::navigateToHujjahLens,
                 onNavigateToQuran = navigationActions::navigateToQuran,
@@ -192,6 +212,19 @@ fun AppNavHost(
                 onNavigateToProfile = navigationActions::navigateToProfile
             )
         }
+
+        // ==================== TILAWAH HISTORY (STRAVA NGAJI) ====================
+        composable<Route.TilawahHistory> {
+            com.example.hujjah.presentation.screens.tilawah.TilawahHistoryScreen(
+                onNavigateBack = navigationActions::navigateBack,
+                onNavigateToHome = navigationActions::navigateToHome,
+                onNavigateToLens = navigationActions::navigateToHujjahLens,
+                onNavigateToQuran = navigationActions::navigateToQuran,
+                onNavigateToHadith = navigationActions::navigateToHadith,
+                onNavigateToKoleksi = navigationActions::navigateToKoleksi,
+                onNavigateToProfile = navigationActions::navigateToProfile
+            )
+        }
     }
 }
 
@@ -229,11 +262,15 @@ private fun createNavigationActions(navController: NavHostController): Navigatio
             }
         }
 
-        override fun navigateToProfile() {
-            navController.navigate(Route.Profile) {
+        override fun navigateToKoleksi() {
+            navController.navigate(Route.Koleksi) {
                 popUpTo(Route.Home) { inclusive = false }
                 launchSingleTop = true
             }
+        }
+
+        override fun navigateToProfile() {
+            navController.navigate(Route.Profile)
         }
 
         override fun navigateToHujjahResult(topicId: String) {
@@ -250,6 +287,10 @@ private fun createNavigationActions(navController: NavHostController): Navigatio
 
         override fun navigateToNotes() {
             navController.navigate(Route.Notes)
+        }
+
+        override fun navigateToTilawahHistory() {
+            navController.navigate(Route.TilawahHistory)
         }
 
         override fun navigateToNoteDetail(noteId: Long) {

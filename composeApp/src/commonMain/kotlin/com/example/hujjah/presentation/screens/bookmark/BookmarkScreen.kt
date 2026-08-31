@@ -61,16 +61,6 @@ fun BookmarkScreen(
                     }
                 }
             )
-        },
-        bottomBar = {
-            HujjahSprint2MenuBar(
-                currentItem = HujjahMenuItem.PROFILE,
-                onNavigateToHome = onNavigateToHome,
-                onNavigateToLens = onNavigateToLens,
-                onNavigateToQuran = onNavigateToQuran,
-                onNavigateToHadith = onNavigateToHadith,
-                onNavigateToProfile = onNavigateToProfile
-            )
         }
     ) { paddingValues ->
         when (val state = uiState) {

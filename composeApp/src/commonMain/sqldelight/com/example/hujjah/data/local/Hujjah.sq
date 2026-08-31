@@ -112,3 +112,38 @@ WHERE id = ?;
 
 clearAllChats:
 DELETE FROM LensChatEntity;
+
+-- Table to store Khazanah Tilawah Activity Logs (Strava for Ngaji)
+CREATE TABLE TilawahLogEntity (
+    id TEXT PRIMARY KEY NOT NULL,
+    timestamp INTEGER NOT NULL,
+    sourceType TEXT NOT NULL,
+    title TEXT NOT NULL,
+    durationSeconds INTEGER NOT NULL,
+    itemsReadCount INTEGER NOT NULL,
+    dateString TEXT NOT NULL,
+    photoPath TEXT,
+    note TEXT
+);
+
+-- Queries for Tilawah Log
+getAllTilawahLogs:
+SELECT * FROM TilawahLogEntity
+ORDER BY timestamp DESC;
+
+getTilawahLogsByDate:
+SELECT * FROM TilawahLogEntity
+WHERE dateString = ?
+ORDER BY timestamp DESC;
+
+insertTilawahLog:
+INSERT OR REPLACE INTO TilawahLogEntity (id, timestamp, sourceType, title, durationSeconds, itemsReadCount, dateString, photoPath, note)
+VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?);
+
+deleteTilawahLogById:
+DELETE FROM TilawahLogEntity
+WHERE id = ?;
+
+clearAllTilawahLogs:
+DELETE FROM TilawahLogEntity;
+

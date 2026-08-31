@@ -20,7 +20,7 @@ class GeminiService(private val client: HttpClient) {
     
     companion object {
         private const val BASE_URL = "https://generativelanguage.googleapis.com/v1beta"
-        private const val MODEL = "gemini-flash-latest"
+        private const val MODEL = "gemini-3.6-flash"
     }
     
     suspend fun generateContent(

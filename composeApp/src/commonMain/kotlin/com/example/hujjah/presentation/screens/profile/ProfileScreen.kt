@@ -43,16 +43,19 @@ import coil3.compose.AsyncImage
 import kotlin.io.encoding.Base64
 import kotlin.io.encoding.ExperimentalEncodingApi
 
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
+
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ProfileScreen(
-    onNavigateToHome: () -> Unit,
-    onNavigateToLens: () -> Unit,
-    onNavigateToQuran: () -> Unit,
-    onNavigateToHadith: () -> Unit,
-    onNavigateToProfile: () -> Unit,
-    onNavigateToBookmarks: () -> Unit,
-    onNavigateToNotes: () -> Unit,
+    onNavigateBack: () -> Unit = {},
+    onNavigateToHome: () -> Unit = {},
+    onNavigateToLens: () -> Unit = {},
+    onNavigateToQuran: () -> Unit = {},
+    onNavigateToHadith: () -> Unit = {},
+    onNavigateToProfile: () -> Unit = {},
+    onNavigateToBookmarks: () -> Unit = {},
+    onNavigateToNotes: () -> Unit = {},
     viewModel: ProfileViewModel = koinViewModel()
 ) {
     val userName by viewModel.userName.collectAsStateWithLifecycle()
@@ -93,19 +96,18 @@ fun ProfileScreen(
                         color = colors.goldHighlight
                     )
                 },
+                navigationIcon = {
+                    IconButton(onClick = onNavigateBack) {
+                        Icon(
+                            imageVector = Icons.AutoMirrored.Filled.ArrowBack,
+                            contentDescription = "Kembali",
+                            tint = colors.goldHighlight
+                        )
+                    }
+                },
                 colors = TopAppBarDefaults.topAppBarColors(
                     containerColor = MaterialTheme.colorScheme.background
                 )
-            )
-        },
-        bottomBar = {
-            HujjahSprint2MenuBar(
-                currentItem = HujjahMenuItem.PROFILE,
-                onNavigateToHome = onNavigateToHome,
-                onNavigateToLens = onNavigateToLens,
-                onNavigateToQuran = onNavigateToQuran,
-                onNavigateToHadith = onNavigateToHadith,
-                onNavigateToProfile = onNavigateToProfile
             )
         }
     ) { paddingValues ->

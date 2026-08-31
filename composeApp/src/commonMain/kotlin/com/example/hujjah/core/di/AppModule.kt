@@ -11,10 +11,12 @@ import com.example.hujjah.data.repository.AIRepositoryImpl
 import com.example.hujjah.data.repository.NoteRepositoryImpl
 import com.example.hujjah.data.repository.hujjah.BookmarkRepositoryImpl
 import com.example.hujjah.data.repository.hujjah.HujjahRepositoryImpl
+import com.example.hujjah.data.repository.hujjah.TilawahRepositoryImpl
 import com.example.hujjah.domain.repository.AIRepository
 import com.example.hujjah.domain.repository.NoteRepository
 import com.example.hujjah.domain.repository.hujjah.BookmarkRepository
 import com.example.hujjah.domain.repository.hujjah.HujjahRepository
+import com.example.hujjah.domain.repository.hujjah.TilawahRepository
 import com.example.hujjah.domain.usecase.DeleteNoteUseCase
 import com.example.hujjah.domain.usecase.GenerateIdeasUseCase
 import com.example.hujjah.domain.usecase.GetAllNotesUseCase
@@ -76,6 +78,7 @@ val repositoryModule = module {
     // Sprint 2 Hujjah repositories
     singleOf(::HujjahRepositoryImpl) bind HujjahRepository::class
     singleOf(::BookmarkRepositoryImpl) bind BookmarkRepository::class
+    singleOf(::TilawahRepositoryImpl) bind TilawahRepository::class
 }
 
 // ==================== USE CASE MODULE ====================

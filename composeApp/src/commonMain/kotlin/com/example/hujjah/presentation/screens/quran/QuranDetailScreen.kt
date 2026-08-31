@@ -30,6 +30,8 @@ import org.koin.compose.koinInject
 import org.koin.compose.viewmodel.koinViewModel
 import com.example.hujjah.data.local.datastore.UserPreferences
 import com.example.hujjah.domain.repository.hujjah.BookmarkRepository
+import com.example.hujjah.domain.repository.hujjah.TilawahRepository
+import kotlinx.datetime.toLocalDateTime
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -46,27 +48,77 @@ fun QuranDetailScreen(
     val listState = rememberLazyListState()
     val coroutineScope = rememberCoroutineScope()
     
+    val tilawahRepository = koinInject<TilawahRepository>()
     val userPreferences = koinInject<UserPreferences>()
     val bookmarkRepository = koinInject<BookmarkRepository>()
     val arabicFontSize by userPreferences.arabicFontSize.collectAsStateWithLifecycle(initialValue = 22)
 
-    // Background sync timer variables
     var activeSeconds by remember { mutableStateOf(0) }
+
+    // Real-time verse scroll tracking
+    var maxSeenVerseIndex by remember { mutableStateOf(0) }
+
+    LaunchedEffect(listState.firstVisibleItemIndex, detailUiState.verses.size) {
+        if (detailUiState.verses.isNotEmpty()) {
+            val currentIndex = listState.firstVisibleItemIndex + 1
+            if (currentIndex > maxSeenVerseIndex) {
+                val diff = if (maxSeenVerseIndex == 0) currentIndex else (currentIndex - maxSeenVerseIndex)
+                maxSeenVerseIndex = currentIndex
+                userPreferences.addVersesRead(diff)
+            }
+        }
+    }
 
     // Start timer while reading
     LaunchedEffect(Unit) {
         viewModel.fetchSurahDetail(surahNumber, surahName)
+        userPreferences.updateStreak()
+        val sessionStartMillis = kotlinx.datetime.Clock.System.now().toEpochMilliseconds()
+        val dateStr = kotlinx.datetime.Clock.System.now().toLocalDateTime(kotlinx.datetime.TimeZone.currentSystemDefault()).date.toString()
+
         while (true) {
             delay(1000)
             activeSeconds++
+            userPreferences.addReadingDuration(1)
+
+            // Save/update session log periodically to keep stats real-time
+            if (activeSeconds >= 3 && activeSeconds % 3 == 0) {
+                val versesCount = (listState.firstVisibleItemIndex + 1).coerceAtLeast(1).coerceAtMost(detailUiState.verses.size.coerceAtLeast(1))
+                tilawahRepository.saveSessionLog(
+                    com.example.hujjah.domain.model.islamic.TilawahSessionLog(
+                        id = "quran-$surahNumber-$sessionStartMillis",
+                        timestamp = sessionStartMillis,
+                        sourceType = com.example.hujjah.domain.model.islamic.TilawahSourceType.QURAN,
+                        title = "QS. $surahName (Surah $surahNumber)",
+                        durationSeconds = activeSeconds.toLong(),
+                        itemsReadCount = versesCount,
+                        dateString = dateStr
+                    )
+                )
+            }
         }
     }
 
-    // Sync back reading duration to home analytics when leaving screen
+    // Final sync on dispose
     DisposableEffect(Unit) {
         onDispose {
-            if (activeSeconds > 0) {
-                viewModel.addReadingTime(activeSeconds)
+            if (activeSeconds >= 3) {
+                val sessionStartMillis = kotlinx.datetime.Clock.System.now().toEpochMilliseconds()
+                val dateStr = kotlinx.datetime.Clock.System.now().toLocalDateTime(kotlinx.datetime.TimeZone.currentSystemDefault()).date.toString()
+                val versesCount = (listState.firstVisibleItemIndex + 1).coerceAtLeast(1).coerceAtMost(detailUiState.verses.size.coerceAtLeast(1))
+                coroutineScope.launch {
+                    tilawahRepository.saveSessionLog(
+                        com.example.hujjah.domain.model.islamic.TilawahSessionLog(
+                            id = "quran-$surahNumber-$sessionStartMillis",
+                            timestamp = sessionStartMillis,
+                            sourceType = com.example.hujjah.domain.model.islamic.TilawahSourceType.QURAN,
+                            title = "QS. $surahName (Surah $surahNumber)",
+                            durationSeconds = activeSeconds.toLong(),
+                            itemsReadCount = versesCount,
+                            dateString = dateStr
+                        )
+                    )
+                }
             }
         }
     }

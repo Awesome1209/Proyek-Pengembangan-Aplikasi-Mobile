@@ -1,15 +1,14 @@
 package com.example.hujjah.presentation.components.hujjah
 
-import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Book
+import androidx.compose.material.icons.filled.Bookmark
 import androidx.compose.material.icons.filled.Forum
 import androidx.compose.material.icons.filled.Home
 import androidx.compose.material.icons.filled.MenuBook
-import androidx.compose.material.icons.filled.Person
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
@@ -31,7 +30,8 @@ enum class HujjahMenuItem {
     LENS,
     QURAN,
     HADITH,
-    PROFILE
+    KOLEKSI,
+    PROFILE // Deprecated legacy alias
 }
 
 @Composable
@@ -41,7 +41,8 @@ fun HujjahSprint2MenuBar(
     onNavigateToLens: () -> Unit,
     onNavigateToQuran: () -> Unit,
     onNavigateToHadith: () -> Unit,
-    onNavigateToProfile: () -> Unit,
+    onNavigateToKoleksi: () -> Unit = {},
+    onNavigateToProfile: () -> Unit = {}, // Backward compatibility fallback
     modifier: Modifier = Modifier
 ) {
     val colors = LocalHujjahColors.current
@@ -89,10 +90,10 @@ fun HujjahSprint2MenuBar(
                 colors = colors
             )
             HujjahTabButton(
-                label = "Profil",
-                icon = Icons.Default.Person,
-                selected = currentItem == HujjahMenuItem.PROFILE,
-                onClick = onNavigateToProfile,
+                label = "Koleksi",
+                icon = Icons.Default.Bookmark,
+                selected = currentItem == HujjahMenuItem.KOLEKSI,
+                onClick = onNavigateToKoleksi,
                 colors = colors
             )
         }

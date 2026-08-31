@@ -660,10 +660,10 @@ private val hadithBooks = listOf(
     Pair("bukhari", "Shahih Bukhari"),
     Pair("muslim", "Shahih Muslim"),
     Pair("abu-daud", "Sunan Abu Daud"),
-    Pair("tirmidzi", "Sunan Tirmidzi"),
-    Pair("nasai", "Sunan Nasai"),
+    Pair("tirmidzi", "Sunan At-Tirmidzi"),
+    Pair("nasai", "Sunan An-Nasa'i"),
     Pair("ibnu-majah", "Sunan Ibnu Majah"),
     Pair("ahmad", "Musnad Ahmad"),
-    Pair("malik", "Muwatta Malik"),
-    Pair("darimi", "Sunan Darimi")
+    Pair("malik", "Muwatha' Malik"),
+    Pair("darimi", "Sunan Ad-Darimi")
 )

@@ -68,16 +68,6 @@ fun HujjahResultScreen(
                     }
                 }
             )
-        },
-        bottomBar = {
-            HujjahSprint2MenuBar(
-                currentItem = HujjahMenuItem.LENS,
-                onNavigateToHome = onNavigateToHome,
-                onNavigateToLens = onNavigateToLens,
-                onNavigateToQuran = onNavigateToQuran,
-                onNavigateToHadith = onNavigateToHadith,
-                onNavigateToProfile = onNavigateToProfile
-            )
         }
     ) { paddingValues ->
         when (val state = uiState) {

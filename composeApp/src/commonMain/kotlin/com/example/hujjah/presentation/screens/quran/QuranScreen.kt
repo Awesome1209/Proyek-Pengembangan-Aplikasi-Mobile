@@ -1,40 +1,45 @@
 package com.example.hujjah.presentation.screens.quran
 
 import androidx.compose.foundation.BorderStroke
+import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Book
-import androidx.compose.material.icons.filled.MenuBook
-import androidx.compose.material.icons.filled.Search
+import androidx.compose.material.icons.filled.ChevronRight
 import androidx.compose.material.icons.filled.Close
+import androidx.compose.material.icons.filled.Search
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.ui.graphics.Path
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import com.example.hujjah.presentation.components.hujjah.HujjahMenuItem
-import com.example.hujjah.presentation.components.hujjah.HujjahSprint2MenuBar
+import com.example.hujjah.domain.model.islamic.SurahItem
 import com.example.hujjah.presentation.components.hujjah.HujjahEmptyState
 import com.example.hujjah.presentation.components.hujjah.HujjahErrorState
-import com.example.hujjah.presentation.components.hujjah.shimmerBrush
+import com.example.hujjah.presentation.components.hujjah.HujjahMenuItem
+import com.example.hujjah.presentation.components.hujjah.HujjahSprint2MenuBar
 import com.example.hujjah.presentation.components.hujjah.ShimmerSurahItem
+import com.example.hujjah.presentation.components.hujjah.shimmerBrush
 import com.example.hujjah.presentation.theme.LocalHujjahColors
+import com.example.hujjah.presentation.theme.customShapes
+import com.example.hujjah.presentation.theme.hujjahArabicTypography
+import com.example.hujjah.presentation.theme.spacing
 import org.koin.compose.viewmodel.koinViewModel
-import androidx.compose.ui.graphics.Shadow
-import androidx.compose.ui.geometry.Offset
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -43,6 +48,7 @@ fun QuranScreen(
     onNavigateToLens: () -> Unit,
     onNavigateToQuran: () -> Unit,
     onNavigateToHadith: () -> Unit,
+    onNavigateToKoleksi: () -> Unit = {},
     onNavigateToProfile: () -> Unit,
     onNavigateToDetail: (Int, String) -> Unit,
     viewModel: QuranViewModel = koinViewModel()
@@ -51,33 +57,26 @@ fun QuranScreen(
     val lastRead by viewModel.lastReadLocation.collectAsStateWithLifecycle()
     val colors = LocalHujjahColors.current
 
-    // Text glow configuration for dark mode
-    val textGlow = if (colors.isDarkTheme) {
-        Shadow(
-            color = colors.goldHighlight.copy(alpha = 0.8f),
-            offset = Offset(0f, 0f),
-            blurRadius = 8f
-        )
-    } else {
-        Shadow.None
-    }
+    val charcoalColor = MaterialTheme.colorScheme.onBackground
+    val warmGrayColor = MaterialTheme.colorScheme.onSurfaceVariant
+    val warmIvoryColor = MaterialTheme.colorScheme.background
+    val surfaceColor = MaterialTheme.colorScheme.surface
+    val outlineColor = MaterialTheme.colorScheme.outline
 
     Scaffold(
-        containerColor = MaterialTheme.colorScheme.background,
+        containerColor = warmIvoryColor,
         topBar = {
             TopAppBar(
                 title = {
                     Text(
-                        text = "Al-Qur'an Mushaf",
-                        fontWeight = FontWeight.Bold,
-                        color = colors.goldHighlight,
-                        style = MaterialTheme.typography.titleLarge.copy(
-                            shadow = textGlow
-                        )
+                        text = "AL-QUR'AN",
+                        style = MaterialTheme.typography.titleLarge,
+                        fontWeight = FontWeight.SemiBold,
+                        color = charcoalColor
                     )
                 },
                 colors = TopAppBarDefaults.topAppBarColors(
-                    containerColor = MaterialTheme.colorScheme.background
+                    containerColor = warmIvoryColor
                 )
             )
         },
@@ -88,6 +87,7 @@ fun QuranScreen(
                 onNavigateToLens = onNavigateToLens,
                 onNavigateToQuran = onNavigateToQuran,
                 onNavigateToHadith = onNavigateToHadith,
+                onNavigateToKoleksi = onNavigateToKoleksi,
                 onNavigateToProfile = onNavigateToProfile
             )
         }
@@ -96,129 +96,77 @@ fun QuranScreen(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(paddingValues)
-                .padding(horizontal = 16.dp)
+                .padding(horizontal = MaterialTheme.spacing.extraLarge),
+            verticalArrangement = Arrangement.spacedBy(MaterialTheme.spacing.medium)
         ) {
-            // ==================== THE GOLDEN CARD WITH GOLD GLOW SHADOW ====================
-            Card(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(vertical = 12.dp)
-                    .goldGlowShadow(colors.isDarkTheme, colors.goldHighlight, RoundedCornerShape(24.dp))
-                    .clickable {
-                        if (lastRead.isNotBlank()) {
-                            // Extract surah name or use default
-                            val surahName = lastRead.substringBefore(":").replace("QS. ", "").trim()
-                            onNavigateToDetail(18, surahName) // default to Al-Kahfi for demo
-                        } else {
-                            onNavigateToDetail(1, "Al-Fatihah")
-                        }
-                    },
-                shape = RoundedCornerShape(24.dp),
-                colors = CardDefaults.cardColors(
-                    containerColor = colors.goldHighlight
-                ),
-                elevation = CardDefaults.cardElevation(defaultElevation = 4.dp)
-            ) {
-                Row(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(20.dp),
-                    verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.SpaceBetween
-                ) {
-                    Column(modifier = Modifier.weight(1f)) {
-                        Row(verticalAlignment = Alignment.CenterVertically) {
-                            Icon(
-                                imageVector = Icons.Default.MenuBook,
-                                contentDescription = null,
-                                tint = MaterialTheme.colorScheme.background,
-                                modifier = Modifier.size(18.dp)
-                            )
-                            Spacer(modifier = Modifier.width(8.dp))
-                            Text(
-                                text = "Terakhir Baca",
-                                fontWeight = FontWeight.Bold,
-                                color = MaterialTheme.colorScheme.background,
-                                style = MaterialTheme.typography.bodyMedium
-                            )
-                        }
+            // Header Subtle Divider
+            HorizontalDivider(
+                color = colors.goldHighlight.copy(alpha = 0.2f),
+                thickness = 0.5.dp
+            )
 
-                        Spacer(modifier = Modifier.height(10.dp))
-
-                        Text(
-                            text = lastRead.ifBlank { "Mulai Membaca Al-Qur'an" },
-                            fontSize = 20.sp,
-                            fontWeight = FontWeight.ExtraBold,
-                            color = MaterialTheme.colorScheme.background
-                        )
-                    }
-
-                    Icon(
-                        imageVector = Icons.Default.Book,
-                        contentDescription = null,
-                        tint = MaterialTheme.colorScheme.background.copy(alpha = 0.5f),
-                        modifier = Modifier.size(48.dp)
-                    )
-                }
-            }
-
-            Spacer(modifier = Modifier.height(8.dp))
-            
-            // ==================== SEARCH BAR WITH iOS FAST DELETE (X) ====================
-            OutlinedTextField(
-                value = uiState.searchQuery,
-                onValueChange = viewModel::onSearchQueryChanged,
-                placeholder = { Text("Cari Surah...", fontSize = 14.sp) },
-                leadingIcon = { Icon(Icons.Default.Search, contentDescription = null, tint = colors.goldHighlight) },
-                trailingIcon = {
-                    if (uiState.searchQuery.isNotEmpty()) {
-                        IconButton(onClick = { viewModel.onSearchQueryChanged("") }) {
-                            Icon(
-                                imageVector = Icons.Default.Close,
-                                contentDescription = "Hapus Pencarian",
-                                tint = colors.goldHighlight
-                            )
-                        }
+            // ==================== 1. LAST READ HERO ====================
+            QuranLastReadHero(
+                lastRead = lastRead,
+                onClick = {
+                    if (lastRead.isNotBlank()) {
+                        val surahName = lastRead.substringBefore(":").replace("QS. ", "").trim()
+                        onNavigateToDetail(18, surahName)
+                    } else {
+                        onNavigateToDetail(1, "Al-Fatihah")
                     }
                 },
-                shape = RoundedCornerShape(24.dp),
-                modifier = Modifier.fillMaxWidth(),
-                maxLines = 1,
-                colors = OutlinedTextFieldDefaults.colors(
-                    focusedBorderColor = colors.goldHighlight,
-                    focusedContainerColor = MaterialTheme.colorScheme.surface,
-                    unfocusedContainerColor = MaterialTheme.colorScheme.surface
-                )
+                goldHighlight = colors.goldHighlight,
+                charcoalColor = charcoalColor,
+                warmGrayColor = warmGrayColor,
+                surfaceColor = surfaceColor
             )
-            
-            Spacer(modifier = Modifier.height(16.dp))
 
-            // ==================== SURAH LIST GROUPED CONTAINER ====================
+            // ==================== 2. SEARCH BAR ====================
+            QuranSearchField(
+                query = uiState.searchQuery,
+                onQueryChange = viewModel::onSearchQueryChanged,
+                goldHighlight = colors.goldHighlight,
+                warmGrayColor = warmGrayColor,
+                surfaceColor = surfaceColor
+            )
+
+            // ==================== 3. SECTION HEADER ====================
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(top = 4.dp, bottom = 4.dp),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Text(
+                    text = "Daftar Surah",
+                    style = MaterialTheme.typography.titleMedium,
+                    fontWeight = FontWeight.SemiBold,
+                    color = charcoalColor
+                )
+                Text(
+                    text = "${uiState.surahs.size} Surah",
+                    style = MaterialTheme.typography.labelSmall,
+                    color = warmGrayColor
+                )
+            }
+
+            // ==================== 4. OPEN SURAH LIST (NO OUTER CARD) ====================
             if (uiState.isLoading) {
-                Card(
-                    modifier = Modifier
-                        .weight(1f)
-                        .fillMaxWidth(),
-                    shape = RoundedCornerShape(24.dp),
-                    colors = CardDefaults.cardColors(
-                        containerColor = if (colors.isDarkTheme) Color.Black else Color.White
-                    ),
-                    border = BorderStroke(1.dp, colors.goldHighlight.copy(alpha = 0.25f))
+                val brush = shimmerBrush()
+                LazyColumn(
+                    modifier = Modifier.fillMaxSize(),
+                    verticalArrangement = Arrangement.spacedBy(1.dp)
                 ) {
-                    val brush = shimmerBrush()
-                    LazyColumn(
-                        modifier = Modifier.fillMaxSize(),
-                        verticalArrangement = Arrangement.spacedBy(1.dp)
-                    ) {
-                        items(6) { idx ->
-                            ShimmerSurahItem(brush = brush)
-                            if (idx < 5) {
-                                HorizontalDivider(
-                                    modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp),
-                                    color = MaterialTheme.colorScheme.outline.copy(alpha = 0.15f),
-                                    thickness = 0.5.dp
-                                )
-                            }
+                    items(6) { idx ->
+                        ShimmerSurahItem(brush = brush)
+                        if (idx < 5) {
+                            HorizontalDivider(
+                                modifier = Modifier.fillMaxWidth(),
+                                color = outlineColor.copy(alpha = 0.15f),
+                                thickness = 0.5.dp
+                            )
                         }
                     }
                 }
@@ -233,75 +181,19 @@ fun QuranScreen(
                     message = "Tidak ada surah yang cocok dengan pencarian \"${uiState.searchQuery}\". Coba kata kunci lain."
                 )
             } else {
-                Card(
-                    modifier = Modifier
-                        .weight(1f)
-                        .fillMaxWidth(),
-                    shape = RoundedCornerShape(24.dp),
-                    colors = CardDefaults.cardColors(
-                        containerColor = if (colors.isDarkTheme) Color.Black else Color.White
-                    ),
-                    border = BorderStroke(1.dp, colors.goldHighlight.copy(alpha = 0.25f))
+                LazyColumn(
+                    modifier = Modifier.fillMaxSize(),
+                    contentPadding = PaddingValues(bottom = 16.dp)
                 ) {
-                    LazyColumn(
-                        modifier = Modifier.fillMaxSize(),
-                        verticalArrangement = Arrangement.spacedBy(1.dp)
-                    ) {
-                        items(uiState.surahs) { surah ->
-                            Row(
-                                modifier = Modifier
-                                    .fillMaxWidth()
-                                    .clickable {
-                                        onNavigateToDetail(surah.number, surah.name)
-                                    }
-                                    .padding(vertical = 14.dp, horizontal = 16.dp),
-                                verticalAlignment = Alignment.CenterVertically
-                            ) {
-                                // Gold Octagram Frame for Number
-                                GoldOctagramNumber(
-                                    number = surah.number,
-                                    isDarkTheme = colors.isDarkTheme,
-                                    goldColor = colors.goldHighlight
-                                )
-
-                                Spacer(modifier = Modifier.width(16.dp))
-
-                                Column(modifier = Modifier.weight(1f)) {
-                                    Text(
-                                        text = surah.name,
-                                        fontWeight = FontWeight.Bold,
-                                        color = if (colors.isDarkTheme) Color.White else colors.islamicGreen,
-                                        fontSize = 16.sp
-                                    )
-                                    Text(
-                                        text = "${surah.revelation} • ${surah.numberOfVerses} Ayat",
-                                        fontSize = 12.sp,
-                                        color = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.6f)
-                                    )
-                                }
-
-                                // Arabic text on the right
-                                Text(
-                                    text = surah.asma,
-                                    fontSize = 20.sp,
-                                    fontWeight = FontWeight.Bold,
-                                    color = colors.goldHighlight,
-                                    textAlign = TextAlign.End,
-                                    style = MaterialTheme.typography.bodyLarge.copy(
-                                        shadow = textGlow
-                                    )
-                                )
-                            }
-
-                            // Divider
-                            if (surah != uiState.surahs.last()) {
-                                HorizontalDivider(
-                                    modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp),
-                                    color = MaterialTheme.colorScheme.outline.copy(alpha = 0.15f),
-                                    thickness = 0.5.dp
-                                )
-                            }
-                        }
+                    items(uiState.surahs, key = { it.number }) { surah ->
+                        SurahRowItem(
+                            surah = surah,
+                            onClick = { onNavigateToDetail(surah.number, surah.name) },
+                            goldHighlight = colors.goldHighlight,
+                            charcoalColor = charcoalColor,
+                            warmGrayColor = warmGrayColor,
+                            outlineColor = outlineColor
+                        )
                     }
                 }
             }
@@ -309,52 +201,289 @@ fun QuranScreen(
     }
 }
 
-// ==================== GOLD OCTAGRAM NUMBER ICON (RUB EL HIZB SHAPE) ====================
+// ==================== COMPONENT 1: LAST READ HERO ====================
 @Composable
-fun GoldOctagramNumber(
-    number: Int,
-    isDarkTheme: Boolean,
-    goldColor: Color,
-    modifier: Modifier = Modifier
+private fun QuranLastReadHero(
+    lastRead: String,
+    onClick: () -> Unit,
+    goldHighlight: Color,
+    charcoalColor: Color,
+    warmGrayColor: Color,
+    surfaceColor: Color
 ) {
-    Box(
-        contentAlignment = Alignment.Center,
-        modifier = modifier.size(40.dp)
+    Card(
+        modifier = Modifier
+            .fillMaxWidth()
+            .clickable(onClick = onClick),
+        shape = MaterialTheme.customShapes.large,
+        colors = CardDefaults.cardColors(
+            containerColor = surfaceColor
+        ),
+        border = BorderStroke(1.dp, goldHighlight.copy(alpha = 0.25f)),
+        elevation = CardDefaults.cardElevation(defaultElevation = 0.dp)
     ) {
         Box(
             modifier = Modifier
-                .size(26.dp)
-                .background(goldColor.copy(alpha = 0.15f), shape = RoundedCornerShape(4.dp))
-                .border(1.dp, goldColor, RoundedCornerShape(4.dp))
-        )
-        Box(
+                .fillMaxWidth()
+                .height(130.dp)
+        ) {
+            // Warm Gold Gradient Overlay
+            Box(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .background(
+                        Brush.horizontalGradient(
+                            colors = listOf(
+                                goldHighlight.copy(alpha = 0.12f),
+                                surfaceColor
+                            )
+                        )
+                    )
+            )
+
+            // Mosque Silhouette Decoration (Canvas)
+            MosqueHeroSilhouette(
+                goldHighlight = goldHighlight,
+                modifier = Modifier
+                    .width(160.dp)
+                    .fillMaxHeight()
+                    .align(Alignment.BottomEnd)
+            )
+
+            // Content Row
+            Row(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(MaterialTheme.spacing.large),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Column(
+                    modifier = Modifier.weight(1f),
+                    verticalArrangement = Arrangement.Center
+                ) {
+                    Text(
+                        text = "TERAKHIR DIBACA",
+                        style = MaterialTheme.typography.labelSmall,
+                        fontWeight = FontWeight.Bold,
+                        color = warmGrayColor,
+                        letterSpacing = 1.5.sp
+                    )
+
+                    Spacer(modifier = Modifier.height(6.dp))
+
+                    Text(
+                        text = lastRead.ifBlank { "Mulai Membaca Al-Qur'an" },
+                        style = MaterialTheme.typography.titleLarge,
+                        fontWeight = FontWeight.SemiBold,
+                        color = charcoalColor,
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis
+                    )
+
+                    Spacer(modifier = Modifier.height(2.dp))
+
+                    Text(
+                        text = if (lastRead.isNotBlank()) "Lanjutkan bacaan terakhir" else "Belum ada bacaan terakhir",
+                        style = MaterialTheme.typography.bodySmall,
+                        color = warmGrayColor
+                    )
+                }
+
+                Icon(
+                    imageVector = Icons.Default.ChevronRight,
+                    contentDescription = "Buka Bacaan",
+                    tint = charcoalColor,
+                    modifier = Modifier.size(24.dp)
+                )
+            }
+        }
+    }
+}
+
+// ==================== COMPONENT 2: SEARCH FIELD ====================
+@Composable
+private fun QuranSearchField(
+    query: String,
+    onQueryChange: (String) -> Unit,
+    goldHighlight: Color,
+    warmGrayColor: Color,
+    surfaceColor: Color
+) {
+    Surface(
+        shape = MaterialTheme.customShapes.pill,
+        color = surfaceColor,
+        border = BorderStroke(1.dp, goldHighlight.copy(alpha = 0.25f)),
+        modifier = Modifier
+            .fillMaxWidth()
+            .height(50.dp)
+    ) {
+        Row(
             modifier = Modifier
-                .size(26.dp)
-                .graphicsLayer(rotationZ = 45f)
-                .background(goldColor.copy(alpha = 0.15f), shape = RoundedCornerShape(4.dp))
-                .border(1.dp, goldColor, RoundedCornerShape(4.dp))
-        )
-        Text(
-            text = "$number",
-            color = if (isDarkTheme) Color.White else Color(0xFF134E4A),
-            fontSize = 11.sp,
-            fontWeight = FontWeight.Bold
+                .fillMaxSize()
+                .padding(horizontal = 16.dp),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Icon(
+                imageVector = Icons.Default.Search,
+                contentDescription = null,
+                tint = goldHighlight,
+                modifier = Modifier.size(20.dp)
+            )
+
+            Spacer(modifier = Modifier.width(10.dp))
+
+            OutlinedTextField(
+                value = query,
+                onValueChange = onQueryChange,
+                placeholder = {
+                    Text(
+                        text = "Cari surah...",
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = warmGrayColor
+                    )
+                },
+                modifier = Modifier.weight(1f),
+                singleLine = true,
+                colors = OutlinedTextFieldDefaults.colors(
+                    focusedBorderColor = Color.Transparent,
+                    unfocusedBorderColor = Color.Transparent,
+                    focusedContainerColor = Color.Transparent,
+                    unfocusedContainerColor = Color.Transparent
+                )
+            )
+
+            if (query.isNotEmpty()) {
+                IconButton(
+                    onClick = { onQueryChange("") },
+                    modifier = Modifier.size(24.dp)
+                ) {
+                    Icon(
+                        imageVector = Icons.Default.Close,
+                        contentDescription = "Hapus Pencarian",
+                        tint = warmGrayColor,
+                        modifier = Modifier.size(16.dp)
+                    )
+                }
+            }
+        }
+    }
+}
+
+// ==================== COMPONENT 3: OPEN SURAH ROW ITEM ====================
+@Composable
+private fun SurahRowItem(
+    surah: SurahItem,
+    onClick: () -> Unit,
+    goldHighlight: Color,
+    charcoalColor: Color,
+    warmGrayColor: Color,
+    outlineColor: Color
+) {
+    Column(modifier = Modifier.fillMaxWidth()) {
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .clickable(onClick = onClick)
+                .padding(vertical = 14.dp, horizontal = 4.dp),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            // Compact Surah Number Badge
+            Box(
+                contentAlignment = Alignment.Center,
+                modifier = Modifier
+                    .size(36.dp)
+                    .clip(RoundedCornerShape(10.dp))
+                    .background(MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.6f))
+                    .border(0.5.dp, goldHighlight.copy(alpha = 0.3f), RoundedCornerShape(10.dp))
+            ) {
+                Text(
+                    text = "${surah.number}",
+                    style = MaterialTheme.typography.labelMedium,
+                    fontWeight = FontWeight.Bold,
+                    color = charcoalColor
+                )
+            }
+
+            Spacer(modifier = Modifier.width(14.dp))
+
+            // Surah Latin Name & Ayah Count
+            Column(modifier = Modifier.weight(1f)) {
+                Text(
+                    text = surah.name,
+                    style = MaterialTheme.typography.titleMedium,
+                    fontWeight = FontWeight.SemiBold,
+                    color = charcoalColor
+                )
+                Spacer(modifier = Modifier.height(2.dp))
+                Text(
+                    text = "${surah.revelation} · ${surah.numberOfVerses} Ayat",
+                    style = MaterialTheme.typography.bodySmall,
+                    color = warmGrayColor
+                )
+            }
+
+            // Arabic Surah Name (Amiri font)
+            Text(
+                text = surah.asma,
+                style = hujjahArabicTypography().preview.copy(
+                    fontSize = 20.sp,
+                    color = goldHighlight
+                ),
+                textAlign = TextAlign.End
+            )
+        }
+
+        // Hairline Divider Between Rows
+        HorizontalDivider(
+            color = outlineColor.copy(alpha = 0.2f),
+            thickness = 0.5.dp
         )
     }
 }
 
-// ==================== GOLD GLOW SHADOW EXTENSION MODIFIER ====================
-fun Modifier.goldGlowShadow(
-    enabled: Boolean,
-    color: Color,
-    shape: androidx.compose.ui.graphics.Shape
-): Modifier {
-    return if (enabled) {
-        this
-            .border(4.dp, color.copy(alpha = 0.08f), shape)
-            .border(2.dp, color.copy(alpha = 0.2f), shape)
-            .border(0.5.dp, color.copy(alpha = 0.5f), shape)
-    } else {
-        this
+// ==================== SUB-COMPONENT: HERO MOSQUE SILHOUETTE ====================
+@Composable
+private fun MosqueHeroSilhouette(
+    goldHighlight: Color,
+    modifier: Modifier = Modifier
+) {
+    Canvas(modifier = modifier) {
+        val w = size.width
+        val h = size.height
+        val baseLine = h
+
+        val path = Path().apply {
+            moveTo(0f, baseLine)
+            lineTo(w * 0.2f, baseLine)
+
+            // Minaret
+            lineTo(w * 0.2f, h * 0.40f)
+            lineTo(w * 0.23f, h * 0.32f) // Spire peak
+            lineTo(w * 0.26f, h * 0.40f)
+            lineTo(w * 0.26f, baseLine)
+
+            // Side Dome
+            lineTo(w * 0.38f, baseLine)
+            cubicTo(w * 0.38f, h * 0.55f, w * 0.58f, h * 0.55f, w * 0.58f, baseLine)
+
+            // Main Central Dome
+            lineTo(w * 0.60f, baseLine)
+            cubicTo(w * 0.60f, h * 0.25f, w * 0.90f, h * 0.25f, w * 0.90f, baseLine)
+
+            // Central Finial Spire
+            moveTo(w * 0.75f, h * 0.10f)
+            lineTo(w * 0.75f, h * 0.25f)
+
+            lineTo(w, baseLine)
+            lineTo(w, h)
+            lineTo(0f, h)
+            close()
+        }
+
+        drawPath(
+            path = path,
+            color = goldHighlight.copy(alpha = 0.10f)
+        )
     }
 }

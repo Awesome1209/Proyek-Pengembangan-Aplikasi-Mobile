@@ -75,16 +75,6 @@ fun ReferenceDetailScreen(
                     }
                 }
             )
-        },
-        bottomBar = {
-            HujjahSprint2MenuBar(
-                currentItem = HujjahMenuItem.QURAN,
-                onNavigateToHome = onNavigateToHome,
-                onNavigateToLens = onNavigateToLens,
-                onNavigateToQuran = onNavigateToQuran,
-                onNavigateToHadith = onNavigateToHadith,
-                onNavigateToProfile = onNavigateToProfile
-            )
         }
     ) { paddingValues ->
         when {

@@ -24,6 +24,65 @@ class UserPreferences(
         val LAST_READ_QURAN_LOC = stringPreferencesKey("last_read_quran_loc") // e.g. "QS. Al-Kahfi: Ayat 10"
         val ARABIC_FONT_SIZE = intPreferencesKey("arabic_font_size")
         val PROFILE_IMAGE_BASE64 = stringPreferencesKey("profile_image_base64")
+        val DAILY_TARGET_MINUTES = intPreferencesKey("daily_target_minutes")
+        val ITEMS_READ_TODAY = intPreferencesKey("items_read_today")
+        val VERSES_READ_TODAY = intPreferencesKey("verses_read_today")
+        val HADITHS_READ_TODAY = intPreferencesKey("hadiths_read_today")
+    }
+
+    // ==================== ITEMS READ COUNTER (AYAT & HADITS SEPARATE) ====================
+
+    val itemsReadToday: Flow<Int> = dataStore.data.map { prefs ->
+        val today = Clock.System.now().toLocalDateTime(TimeZone.currentSystemDefault()).date.toString()
+        val lastDate = prefs[Keys.LAST_READ_DATE] ?: ""
+        if (lastDate != today) 0 else (prefs[Keys.ITEMS_READ_TODAY] ?: 0)
+    }
+
+    val versesReadToday: Flow<Int> = dataStore.data.map { prefs ->
+        val today = Clock.System.now().toLocalDateTime(TimeZone.currentSystemDefault()).date.toString()
+        val lastDate = prefs[Keys.LAST_READ_DATE] ?: ""
+        if (lastDate != today) 0 else (prefs[Keys.VERSES_READ_TODAY] ?: 0)
+    }
+
+    val hadithsReadToday: Flow<Int> = dataStore.data.map { prefs ->
+        val today = Clock.System.now().toLocalDateTime(TimeZone.currentSystemDefault()).date.toString()
+        val lastDate = prefs[Keys.LAST_READ_DATE] ?: ""
+        if (lastDate != today) 0 else (prefs[Keys.HADITHS_READ_TODAY] ?: 0)
+    }
+
+    suspend fun addItemsRead(count: Int) {
+        if (count <= 0) return
+        val today = Clock.System.now().toLocalDateTime(TimeZone.currentSystemDefault()).date.toString()
+        dataStore.edit { prefs ->
+            val lastDate = prefs[Keys.LAST_READ_DATE] ?: ""
+            val current = if (lastDate != today) 0 else (prefs[Keys.ITEMS_READ_TODAY] ?: 0)
+            prefs[Keys.ITEMS_READ_TODAY] = current + count
+            prefs[Keys.LAST_READ_DATE] = today
+        }
+    }
+
+    suspend fun addVersesRead(count: Int) {
+        if (count <= 0) return
+        addItemsRead(count)
+        val today = Clock.System.now().toLocalDateTime(TimeZone.currentSystemDefault()).date.toString()
+        dataStore.edit { prefs ->
+            val lastDate = prefs[Keys.LAST_READ_DATE] ?: ""
+            val current = if (lastDate != today) 0 else (prefs[Keys.VERSES_READ_TODAY] ?: 0)
+            prefs[Keys.VERSES_READ_TODAY] = current + count
+            prefs[Keys.LAST_READ_DATE] = today
+        }
+    }
+
+    suspend fun addHadithsRead(count: Int) {
+        if (count <= 0) return
+        addItemsRead(count)
+        val today = Clock.System.now().toLocalDateTime(TimeZone.currentSystemDefault()).date.toString()
+        dataStore.edit { prefs ->
+            val lastDate = prefs[Keys.LAST_READ_DATE] ?: ""
+            val current = if (lastDate != today) 0 else (prefs[Keys.HADITHS_READ_TODAY] ?: 0)
+            prefs[Keys.HADITHS_READ_TODAY] = current + count
+            prefs[Keys.LAST_READ_DATE] = today
+        }
     }
     
     // ==================== DARK MODE ====================
@@ -120,6 +179,18 @@ class UserPreferences(
     suspend fun setArabicFontSize(size: Int) {
         dataStore.edit { prefs ->
             prefs[Keys.ARABIC_FONT_SIZE] = size
+        }
+    }
+
+    // ==================== DAILY TARGET MINUTES ====================
+
+    val dailyTargetMinutes: Flow<Int> = dataStore.data.map { prefs ->
+        prefs[Keys.DAILY_TARGET_MINUTES] ?: 15
+    }
+
+    suspend fun setDailyTargetMinutes(minutes: Int) {
+        dataStore.edit { prefs ->
+            prefs[Keys.DAILY_TARGET_MINUTES] = minutes
         }
     }
 }

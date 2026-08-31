@@ -16,6 +16,6 @@ import com.example.hujjah.BuildConfig
 actual object ApiConfig {
     actual val geminiApiKey: String = BuildConfig.GEMINI_API_KEY
     actual val QURAN_BASE_URL: String = "https://quran-api-id.vercel.app"
-    actual val HADITH_BASE_URL: String = "https://api.hadith.gading.dev"
+    actual val HADITH_BASE_URL: String = "https://hadis-api-id.vercel.app"
     actual val GEMINI_BASE_URL: String = "https://generativelanguage.googleapis.com/v1beta/models/"
 }

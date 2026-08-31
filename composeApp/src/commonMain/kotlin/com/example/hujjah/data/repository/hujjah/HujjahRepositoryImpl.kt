@@ -177,19 +177,37 @@ class HujjahRepositoryImpl(
 
     // ==================== HADITH (OFFLINE-FIRST SSOT) ====================
 
+    private fun formatHadithBookName(id: String, rawName: String = ""): String {
+        val normalizedId = id.lowercase()
+        return when {
+            normalizedId.contains("bukhari") -> "Shahih Bukhari"
+            normalizedId.contains("muslim") -> "Shahih Muslim"
+            normalizedId.contains("daud") -> "Sunan Abu Daud"
+            normalizedId.contains("tirmidzi") -> "Sunan At-Tirmidzi"
+            normalizedId.contains("nasai") -> "Sunan An-Nasa'i"
+            normalizedId.contains("majah") -> "Sunan Ibnu Majah"
+            normalizedId.contains("ahmad") -> "Musnad Ahmad"
+            normalizedId.contains("malik") -> "Muwatha' Malik"
+            normalizedId.contains("darimi") -> "Sunan Ad-Darimi"
+            rawName.isNotBlank() -> rawName
+            else -> rawName
+        }
+    }
+
     override fun getHadithBooks(forceRefresh: Boolean): Flow<List<HadithBookItem>> = flow {
         // 1. Emit cached local data first
         val localBooks = queries.getAllHadithBooks().executeAsList().map {
-            HadithBookItem(it.id, it.name, it.totalHadith.toInt())
+            HadithBookItem(it.id, formatHadithBookName(it.id, it.name), it.totalHadith.toInt())
         }
         emit(localBooks)
 
         // 2. Fetch remote if local is incomplete (< 9 books) or forceRefresh is true
         if (forceRefresh || localBooks.size < 9) {
             try {
-                val response: HadithBooksResponse = httpClient.get("${ApiConfig.HADITH_BASE_URL}/books").body()
-                val remoteBooks = response.data.map {
-                    HadithBookItem(it.id, it.name, it.available)
+                val response: List<HadithBookApiItemDto> = httpClient.get("${ApiConfig.HADITH_BASE_URL}/hadith").body()
+                val remoteBooks = response.map {
+                    val normalizedId = if (it.slug == "abu-dawud") "abu-daud" else it.slug
+                    HadithBookItem(normalizedId, formatHadithBookName(normalizedId, it.name), it.total)
                 }
 
                 // Save to local database
@@ -206,7 +224,7 @@ class HujjahRepositoryImpl(
 
                 // Emit updated list
                 val updatedBooks = queries.getAllHadithBooks().executeAsList().map {
-                    HadithBookItem(it.id, it.name, it.totalHadith.toInt())
+                    HadithBookItem(it.id, formatHadithBookName(it.id, it.name), it.totalHadith.toInt())
                 }
                 emit(updatedBooks)
             } catch (e: Exception) {
@@ -215,13 +233,13 @@ class HujjahRepositoryImpl(
                     val staticBooks = listOf(
                         HadithBookItem("bukhari", "Shahih Bukhari", 6638),
                         HadithBookItem("muslim", "Shahih Muslim", 4930),
-                        HadithBookItem("tirmidzi", "Sunan Tirmidzi", 3625),
-                        HadithBookItem("nasai", "Sunan Nasai", 5364),
+                        HadithBookItem("tirmidzi", "Sunan At-Tirmidzi", 3625),
+                        HadithBookItem("nasai", "Sunan An-Nasa'i", 5364),
                         HadithBookItem("abu-daud", "Sunan Abu Daud", 4419),
                         HadithBookItem("ibnu-majah", "Sunan Ibnu Majah", 4285),
                         HadithBookItem("ahmad", "Musnad Ahmad", 4305),
-                        HadithBookItem("darimi", "Sunan Darimi", 2949),
-                        HadithBookItem("malik", "Muwatta Malik", 1587)
+                        HadithBookItem("darimi", "Sunan Ad-Darimi", 2949),
+                        HadithBookItem("malik", "Muwatha' Malik", 1587)
                     )
                     emit(staticBooks)
                 }
@@ -242,19 +260,26 @@ class HujjahRepositoryImpl(
         // 2. Fetch remote if local is incomplete or forceRefresh is true
         if (forceRefresh || localHadiths.size < expectedCount) {
             try {
-                val response: GadingHadithResponse = httpClient.get("${ApiConfig.HADITH_BASE_URL}/books/$bookId?range=$start-$end").body()
-                val remoteHadiths = response.data.hadiths.map {
-                    HadithItem(it.number, it.arab, it.id)
+                val apiSlug = if (bookId == "abu-daud") "abu-dawud" else bookId
+                val startPage = ((start - 1) / 20) + 1
+                val endPage = ((end - 1) / 20) + 1
+                
+                val allFetchedItems = mutableListOf<HadithDetailItemDto>()
+                for (p in startPage..endPage) {
+                    val response: HadithDetailResponseDto = httpClient.get("${ApiConfig.HADITH_BASE_URL}/hadith/$apiSlug?page=$p").body()
+                    allFetchedItems.addAll(response.items)
                 }
+
+                val targetItems = allFetchedItems.filter { it.number in start..end }
 
                 // Save to local database
                 queries.transaction {
-                    remoteHadiths.forEach { hadith ->
+                    targetItems.forEach { hadith ->
                         queries.insertHadith(
                             bookId = bookId,
                             number = hadith.number.toLong(),
                             arab = hadith.arab,
-                            translation = hadith.translation
+                            translation = hadith.id
                         )
                     }
                 }
@@ -269,7 +294,7 @@ class HujjahRepositoryImpl(
                 if (localHadiths.isEmpty()) {
                     val fallbackHadiths = listOf(
                         HadithItem(1, "إِنَّمَا الأَعْمَالُ بِالنِّيَّاتِ", "Sesungguhnya amal perbuatan itu disertai niat."),
-                        HadithItem(2, "لاَ يُؤْمِنُ أَحَدُكُمْ حَتَّى يُحِبَّ لأَخِيهِ مَا يُحِبُwلِنَفْسِهِ", "Tidak beriman salah seorang di antara kalian sampai ia mencintai saudaranya sebagaimana ia mencintai dirinya sendiri."),
+                        HadithItem(2, "لاَ يُؤْمِنُ أَحَدُكُمْ حَتَّى يُحِبَّ لأَخِيهِ مَا يُحِبُّ لِنَفْسِهِ", "Tidak beriman salah seorang di antara kalian sampai ia mencintai saudaranya sebagaimana ia mencintai dirinya sendiri."),
                         HadithItem(3, "الْمُسْلِمُ مَنْ سَلِمَ الْمُسْلِمُونَ مِنْ لِسَانِهِ وَيَدِهِ", "Seorang muslim adalah orang yang lidah dan tangannya tidak menyakiti muslim lain."),
                         HadithItem(4, "مَنْ كَانَ يُؤْمِنُ بِاللَّهِ وَالْيَوْمِ الآخِرِ فَلْيَقُلْ خَيْرًا أَوْ لِيَصْمُتْ", "Barangsiapa beriman kepada Allah dan hari akhir, hendaklah berkata baik atau diam."),
                         HadithItem(5, "الدِّينُ النَّصِيحَةُ", "Agama itu adalah nasihat.")
@@ -412,36 +437,22 @@ private data class GadingVerseText(
 )
 
 @Serializable
-private data class HadithBooksResponse(
-    val code: Int,
-    val message: String? = null,
-    val data: List<HadithBookItemDto>
-)
-
-@Serializable
-private data class HadithBookItemDto(
+private data class HadithBookApiItemDto(
     val name: String,
-    val id: String,
-    val available: Int
+    val slug: String,
+    val total: Int
 )
 
 @Serializable
-private data class GadingHadithResponse(
-    val code: Int,
-    val message: String? = null,
-    val data: GadingHadithData
-)
-
-@Serializable
-private data class GadingHadithData(
+private data class HadithDetailResponseDto(
     val name: String,
-    val id: String,
-    val available: Int,
-    val hadiths: List<GadingHadithItem>
+    val slug: String,
+    val total: Int,
+    val items: List<HadithDetailItemDto>
 )
 
 @Serializable
-private data class GadingHadithItem(
+private data class HadithDetailItemDto(
     val number: Int,
     val arab: String,
     val id: String
